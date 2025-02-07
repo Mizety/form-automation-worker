@@ -6347,3 +6347,113 @@ Call log:
   - waiting for locator(".confirmation-message:not(.hidden)") to be visible
 
 2025-02-08 02:14:26,713 - __main__ - INFO - Shutting down consumer
+2025-02-08 02:22:53,540 - pika.adapters.utils.connection_workflow - INFO - Pika version 1.3.1 connecting to ('3.1.91.93', 5672)
+2025-02-08 02:22:53,628 - pika.adapters.utils.io_services_utils - INFO - Socket connected: <socket.socket fd=9, family=2, type=1, proto=6, laddr=('192.168.1.5', 65358), raddr=('3.1.91.93', 5672)>
+2025-02-08 02:22:53,628 - pika.adapters.utils.connection_workflow - INFO - Streaming transport linked up: (<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x12ff72b10>, _StreamingProtocolShim: <SelectConnection PROTOCOL transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x12ff72b10> params=<ConnectionParameters host=armadillo.rmq.cloudamqp.com port=5672 virtual_host=fxwaxnqd ssl=False>>).
+2025-02-08 02:22:53,891 - pika.adapters.utils.connection_workflow - INFO - AMQPConnector - reporting success: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x12ff72b10> params=<ConnectionParameters host=armadillo.rmq.cloudamqp.com port=5672 virtual_host=fxwaxnqd ssl=False>>
+2025-02-08 02:22:53,891 - pika.adapters.utils.connection_workflow - INFO - AMQPConnectionWorkflow - reporting success: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x12ff72b10> params=<ConnectionParameters host=armadillo.rmq.cloudamqp.com port=5672 virtual_host=fxwaxnqd ssl=False>>
+2025-02-08 02:22:53,892 - pika.adapters.blocking_connection - INFO - Connection workflow succeeded: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x12ff72b10> params=<ConnectionParameters host=armadillo.rmq.cloudamqp.com port=5672 virtual_host=fxwaxnqd ssl=False>>
+2025-02-08 02:22:53,892 - pika.adapters.blocking_connection - INFO - Created channel=1
+2025-02-08 02:22:54,152 - __main__ - INFO - Successfully connected to RabbitMQ
+2025-02-08 02:22:54,326 - __main__ - INFO - Started consuming messages
+2025-02-08 02:23:10,393 - form_handler - ERROR - Failed to select country: Page.click: Target page, context or browser has been closed
+Call log:
+  - waiting for locator("div.sc-select")
+
+2025-02-08 02:23:10,396 - form_handler - ERROR - Error filling form: Locator.check: Target page, context or browser has been closed
+2025-02-08 02:23:10,396 - form_handler - ERROR - Error automating form fill: Locator.check: Target page, context or browser has been closed
+2025-02-08 02:23:10,534 - __main__ - ERROR - we failed submission
+2025-02-08 02:23:10,534 - __main__ - ERROR - Error processing message: Locator.check: Target page, context or browser has been closed
+2025-02-08 02:23:19,883 - form_handler - ERROR - Failed to select country: Page.click: Target page, context or browser has been closed
+Call log:
+  - waiting for locator("div.sc-select")
+
+2025-02-08 02:23:19,886 - form_handler - ERROR - Error filling form: Locator.check: Target page, context or browser has been closed
+2025-02-08 02:23:19,886 - form_handler - ERROR - Error automating form fill: Locator.check: Target page, context or browser has been closed
+2025-02-08 02:23:20,000 - __main__ - ERROR - we failed submission
+2025-02-08 02:23:20,000 - __main__ - ERROR - Error processing message: Locator.check: Target page, context or browser has been closed
+2025-02-08 02:23:20,796 - __main__ - INFO - Shutting down consumer
+2025-02-08 02:23:42,312 - pika.adapters.utils.connection_workflow - INFO - Pika version 1.3.1 connecting to ('3.1.91.93', 5672)
+2025-02-08 02:23:42,398 - pika.adapters.utils.io_services_utils - INFO - Socket connected: <socket.socket fd=9, family=2, type=1, proto=6, laddr=('192.168.1.5', 49217), raddr=('3.1.91.93', 5672)>
+2025-02-08 02:23:42,399 - pika.adapters.utils.connection_workflow - INFO - Streaming transport linked up: (<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x16854ac60>, _StreamingProtocolShim: <SelectConnection PROTOCOL transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x16854ac60> params=<ConnectionParameters host=armadillo.rmq.cloudamqp.com port=5672 virtual_host=fxwaxnqd ssl=False>>).
+2025-02-08 02:23:42,659 - pika.adapters.utils.connection_workflow - INFO - AMQPConnector - reporting success: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x16854ac60> params=<ConnectionParameters host=armadillo.rmq.cloudamqp.com port=5672 virtual_host=fxwaxnqd ssl=False>>
+2025-02-08 02:23:42,660 - pika.adapters.utils.connection_workflow - INFO - AMQPConnectionWorkflow - reporting success: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x16854ac60> params=<ConnectionParameters host=armadillo.rmq.cloudamqp.com port=5672 virtual_host=fxwaxnqd ssl=False>>
+2025-02-08 02:23:42,660 - pika.adapters.blocking_connection - INFO - Connection workflow succeeded: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x16854ac60> params=<ConnectionParameters host=armadillo.rmq.cloudamqp.com port=5672 virtual_host=fxwaxnqd ssl=False>>
+2025-02-08 02:23:42,661 - pika.adapters.blocking_connection - INFO - Created channel=1
+2025-02-08 02:23:42,919 - __main__ - INFO - Successfully connected to RabbitMQ
+2025-02-08 02:23:43,090 - __main__ - INFO - Started consuming messages
+2025-02-08 02:23:52,920 - form_handler - ERROR - Failed to select country: Page.click: Target page, context or browser has been closed
+Call log:
+  - waiting for locator("div.sc-select")
+
+2025-02-08 02:23:52,925 - form_handler - ERROR - Error filling form: Locator.check: Target page, context or browser has been closed
+2025-02-08 02:23:52,925 - form_handler - ERROR - Error automating form fill: Locator.check: Target page, context or browser has been closed
+2025-02-08 02:23:53,037 - __main__ - ERROR - we failed submission
+2025-02-08 02:23:53,037 - __main__ - ERROR - Error processing message: Locator.check: Target page, context or browser has been closed
+2025-02-08 02:24:10,785 - __main__ - INFO - Shutting down consumer
+2025-02-08 02:24:13,818 - pika.adapters.utils.connection_workflow - INFO - Pika version 1.3.1 connecting to ('3.1.91.93', 5672)
+2025-02-08 02:24:13,901 - pika.adapters.utils.io_services_utils - INFO - Socket connected: <socket.socket fd=9, family=2, type=1, proto=6, laddr=('192.168.1.5', 49390), raddr=('3.1.91.93', 5672)>
+2025-02-08 02:24:13,902 - pika.adapters.utils.connection_workflow - INFO - Streaming transport linked up: (<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x135470e30>, _StreamingProtocolShim: <SelectConnection PROTOCOL transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x135470e30> params=<ConnectionParameters host=armadillo.rmq.cloudamqp.com port=5672 virtual_host=fxwaxnqd ssl=False>>).
+2025-02-08 02:24:14,155 - pika.adapters.utils.connection_workflow - INFO - AMQPConnector - reporting success: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x135470e30> params=<ConnectionParameters host=armadillo.rmq.cloudamqp.com port=5672 virtual_host=fxwaxnqd ssl=False>>
+2025-02-08 02:24:14,156 - pika.adapters.utils.connection_workflow - INFO - AMQPConnectionWorkflow - reporting success: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x135470e30> params=<ConnectionParameters host=armadillo.rmq.cloudamqp.com port=5672 virtual_host=fxwaxnqd ssl=False>>
+2025-02-08 02:24:14,156 - pika.adapters.blocking_connection - INFO - Connection workflow succeeded: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x135470e30> params=<ConnectionParameters host=armadillo.rmq.cloudamqp.com port=5672 virtual_host=fxwaxnqd ssl=False>>
+2025-02-08 02:24:14,157 - pika.adapters.blocking_connection - INFO - Created channel=1
+2025-02-08 02:24:14,409 - __main__ - INFO - Successfully connected to RabbitMQ
+2025-02-08 02:24:14,577 - __main__ - INFO - Started consuming messages
+2025-02-08 02:24:19,410 - form_handler - INFO - Selected country: Germany
+2025-02-08 02:24:21,399 - form_handler - INFO - Form filled successfully
+2025-02-08 02:24:28,133 - form_handler - ERROR - Error submitting form: Page.wait_for_selector: Target page, context or browser has been closed
+Call log:
+  - waiting for locator(".confirmation-message:not(.hidden)") to be visible
+
+2025-02-08 02:24:28,134 - form_handler - ERROR - Error automating form fill: Page.wait_for_selector: Target page, context or browser has been closed
+Call log:
+  - waiting for locator(".confirmation-message:not(.hidden)") to be visible
+
+2025-02-08 02:24:28,242 - __main__ - ERROR - we failed submission
+2025-02-08 02:24:28,242 - __main__ - ERROR - Error processing message: Page.wait_for_selector: Target page, context or browser has been closed
+Call log:
+  - waiting for locator(".confirmation-message:not(.hidden)") to be visible
+
+2025-02-08 02:24:30,177 - __main__ - INFO - Shutting down consumer
+2025-02-08 02:24:38,374 - pika.adapters.utils.connection_workflow - INFO - Pika version 1.3.1 connecting to ('3.1.91.93', 5672)
+2025-02-08 02:24:38,461 - pika.adapters.utils.io_services_utils - INFO - Socket connected: <socket.socket fd=9, family=2, type=1, proto=6, laddr=('192.168.1.5', 49531), raddr=('3.1.91.93', 5672)>
+2025-02-08 02:24:38,461 - pika.adapters.utils.connection_workflow - INFO - Streaming transport linked up: (<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x153224c80>, _StreamingProtocolShim: <SelectConnection PROTOCOL transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x153224c80> params=<ConnectionParameters host=armadillo.rmq.cloudamqp.com port=5672 virtual_host=fxwaxnqd ssl=False>>).
+2025-02-08 02:24:38,723 - pika.adapters.utils.connection_workflow - INFO - AMQPConnector - reporting success: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x153224c80> params=<ConnectionParameters host=armadillo.rmq.cloudamqp.com port=5672 virtual_host=fxwaxnqd ssl=False>>
+2025-02-08 02:24:38,724 - pika.adapters.utils.connection_workflow - INFO - AMQPConnectionWorkflow - reporting success: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x153224c80> params=<ConnectionParameters host=armadillo.rmq.cloudamqp.com port=5672 virtual_host=fxwaxnqd ssl=False>>
+2025-02-08 02:24:38,724 - pika.adapters.blocking_connection - INFO - Connection workflow succeeded: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x153224c80> params=<ConnectionParameters host=armadillo.rmq.cloudamqp.com port=5672 virtual_host=fxwaxnqd ssl=False>>
+2025-02-08 02:24:38,725 - pika.adapters.blocking_connection - INFO - Created channel=1
+2025-02-08 02:24:38,986 - __main__ - INFO - Successfully connected to RabbitMQ
+2025-02-08 02:24:39,161 - __main__ - INFO - Started consuming messages
+2025-02-08 02:24:55,267 - form_handler - ERROR - Failed to select country: Page.click: Target page, context or browser has been closed
+Call log:
+  - waiting for locator("div.sc-select")
+
+2025-02-08 02:24:55,270 - form_handler - ERROR - Error filling form: Locator.check: Target page, context or browser has been closed
+2025-02-08 02:24:55,270 - form_handler - ERROR - Error automating form fill: Locator.check: Target page, context or browser has been closed
+2025-02-08 02:24:55,354 - __main__ - ERROR - we failed submission
+2025-02-08 02:24:55,354 - __main__ - ERROR - Error processing message: Locator.check: Target page, context or browser has been closed
+2025-02-08 02:24:57,592 - __main__ - INFO - Shutting down consumer
+2025-02-08 02:25:19,960 - pika.adapters.utils.connection_workflow - INFO - Pika version 1.3.1 connecting to ('3.1.91.93', 5672)
+2025-02-08 02:25:20,044 - pika.adapters.utils.io_services_utils - INFO - Socket connected: <socket.socket fd=9, family=2, type=1, proto=6, laddr=('192.168.1.5', 49729), raddr=('3.1.91.93', 5672)>
+2025-02-08 02:25:20,045 - pika.adapters.utils.connection_workflow - INFO - Streaming transport linked up: (<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x1687250a0>, _StreamingProtocolShim: <SelectConnection PROTOCOL transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x1687250a0> params=<ConnectionParameters host=armadillo.rmq.cloudamqp.com port=5672 virtual_host=fxwaxnqd ssl=False>>).
+2025-02-08 02:25:20,297 - pika.adapters.utils.connection_workflow - INFO - AMQPConnector - reporting success: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x1687250a0> params=<ConnectionParameters host=armadillo.rmq.cloudamqp.com port=5672 virtual_host=fxwaxnqd ssl=False>>
+2025-02-08 02:25:20,297 - pika.adapters.utils.connection_workflow - INFO - AMQPConnectionWorkflow - reporting success: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x1687250a0> params=<ConnectionParameters host=armadillo.rmq.cloudamqp.com port=5672 virtual_host=fxwaxnqd ssl=False>>
+2025-02-08 02:25:20,298 - pika.adapters.blocking_connection - INFO - Connection workflow succeeded: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x1687250a0> params=<ConnectionParameters host=armadillo.rmq.cloudamqp.com port=5672 virtual_host=fxwaxnqd ssl=False>>
+2025-02-08 02:25:20,298 - pika.adapters.blocking_connection - INFO - Created channel=1
+2025-02-08 02:25:20,500 - __main__ - INFO - Shutting down consumer
+2025-02-08 02:25:22,175 - pika.adapters.utils.connection_workflow - INFO - Pika version 1.3.1 connecting to ('3.1.91.93', 5672)
+2025-02-08 02:25:22,263 - pika.adapters.utils.io_services_utils - INFO - Socket connected: <socket.socket fd=9, family=2, type=1, proto=6, laddr=('192.168.1.5', 49740), raddr=('3.1.91.93', 5672)>
+2025-02-08 02:25:22,263 - pika.adapters.utils.connection_workflow - INFO - Streaming transport linked up: (<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x1501b3020>, _StreamingProtocolShim: <SelectConnection PROTOCOL transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x1501b3020> params=<ConnectionParameters host=armadillo.rmq.cloudamqp.com port=5672 virtual_host=fxwaxnqd ssl=False>>).
+2025-02-08 02:25:22,514 - pika.adapters.utils.connection_workflow - INFO - AMQPConnector - reporting success: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x1501b3020> params=<ConnectionParameters host=armadillo.rmq.cloudamqp.com port=5672 virtual_host=fxwaxnqd ssl=False>>
+2025-02-08 02:25:22,514 - pika.adapters.utils.connection_workflow - INFO - AMQPConnectionWorkflow - reporting success: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x1501b3020> params=<ConnectionParameters host=armadillo.rmq.cloudamqp.com port=5672 virtual_host=fxwaxnqd ssl=False>>
+2025-02-08 02:25:22,515 - pika.adapters.blocking_connection - INFO - Connection workflow succeeded: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x1501b3020> params=<ConnectionParameters host=armadillo.rmq.cloudamqp.com port=5672 virtual_host=fxwaxnqd ssl=False>>
+2025-02-08 02:25:22,515 - pika.adapters.blocking_connection - INFO - Created channel=1
+2025-02-08 02:25:22,766 - __main__ - INFO - Successfully connected to RabbitMQ
+2025-02-08 02:25:22,938 - __main__ - INFO - Started consuming messages
+2025-02-08 02:25:56,882 - form_handler - ERROR - Failed to select country: Page.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("div.sc-select")
+
+2025-02-08 02:25:57,005 - form_handler - INFO - Form filled successfully
+2025-02-08 02:26:01,706 - __main__ - INFO - Shutting down consumer

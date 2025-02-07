@@ -6,6 +6,8 @@ import re
 from dataclasses import dataclass, field
 from typing import List, Optional
 
+from playwright_stealth import stealth_async
+
 from config import Config
 
 logging.basicConfig(
@@ -207,15 +209,16 @@ async def automate_form_fill(data: FormData):
     browser = await playwright.chromium.launch(headless=Config.BROWSER_HEADLESS)
     try:
         page = await browser.new_page()
-
-        await page.context.grant_permissions(['geolocation'])
-        await page.set_extra_http_headers({
-            "Accept-Language": "en-US,en;q=0.9",
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
-        })
+        # await stealth_async(page)
+        # await page.context.grant_permissions(['geolocation'])
+        # await page.set_extra_http_headers({
+        #     "Accept-Language": "en-US,en;q=0.9",
+        #     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
+        # })
 
         # Navigate to form
         await page.goto(Config.FORM_URL)
+
 
         form_filler = LegalFormFiller(page)
         await form_filler.fill_form(data)
