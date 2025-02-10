@@ -13,6 +13,13 @@ class Config:
     RABBITMQ_QUEUE = os.getenv('RABBITMQ_QUEUE', 'FORM_QUEUE_SERVICE')
     RABBITMQ_EXCHANGE = os.getenv('RABBITMQ_EXCHANGE', '')
     RABBITMQ_ROUTING_KEY = os.getenv('RABBITMQ_ROUTING_KEY', 'FORM_QUEUE_SERVICE')
+    
+    # CapSolver
+    CAPSOLVER_API_KEY = os.getenv('CAPSOLVER_API_KEY')
+    CAPSOLVER_WEBSITE_KEY = os.getenv('CAPSOLVER_WEBSITE_KEY')
+
+    # Max workers
+    MAX_WORKERS = int(os.getenv('MAX_WORKERS', 1))
 
     # Form
     FORM_URL = os.getenv('FORM_URL')

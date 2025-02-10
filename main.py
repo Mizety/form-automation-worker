@@ -9,7 +9,7 @@ import aiohttp
 import sys
 
 from config import Config
-from form_handler import automate_form_fill, FormData
+from form_selenium import automate_form_fill_new, FormData
 
 
 logging.basicConfig(
@@ -30,7 +30,7 @@ class RabbitMQConsumer:
         self.channel = None
         self.queue_name = Config.RABBITMQ_QUEUE
         self.connect()
-        self.semaphore = Semaphore(1)
+        self.semaphore = Semaphore(Config.MAX_WORKERS)
 
     def connect(self):
         try:
@@ -100,8 +100,8 @@ class RabbitMQConsumer:
             for k, v in form_data.items() if k not in non_form_fields}
             cleaned_data = self.convert_keys(cleaned_data)
             form_data_instance = FormData( ** cleaned_data)
-            # await self.fetch_form_status_complete(form_id)
-            await automate_form_fill(form_data_instance)
+            await automate_form_fill_new(form_data_instance)
+            await self.fetch_form_status_complete(form_id)
 
         except Exception as e:
             logger.error("we failed submission")
@@ -115,6 +115,7 @@ class RabbitMQConsumer:
     @staticmethod
     def convert_keys(data):
         return {
+            "send_notice_to_author": data.get("sendNoticeToAuthor"),
             "country_of_residence": data.get("countryOfResidence"),
             "is_child_abuse_content": data.get("isChildAbuseContent"),
             "remove_child_abuse_content": data.get("removeChildAbuseContent"),
