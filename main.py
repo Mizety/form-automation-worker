@@ -65,21 +65,22 @@ class RabbitMQConsumer:
 
     async def fetch_form_data(self, form_id: str) -> dict:
         headers = {
-            'x-api-key': 'titanicwaslostinthebeach'
+            'x-api-key': Config.API_KEY
         }
         async with aiohttp.ClientSession(headers=headers) as session:
             async with session.get(f"{BACKEND_URL}/submission/{form_id}/") as response:
                 if response.status == 200:
                     return await response.json()
                 else:
+                    print(response)
                     raise Exception(f"Failed to fetch form data: {response.status}")
 
-    async def fetch_form_status_complete(self, form_id: str) -> bool:
+    async def fetch_form_status_complete(self, form_id: str, status: str) -> bool:
         headers = {
-            'x-api-key': 'titanicwaslostinthebeach'
+            'x-api-key': Config.API_KEY
         }
         body = {
-            "status": "completed"
+            "status": status
         }
         async with aiohttp.ClientSession(headers=headers) as session:
             async with session.patch(f"{BACKEND_URL}/submission/{form_id}/status", json=body) as response:
@@ -94,17 +95,18 @@ class RabbitMQConsumer:
 
         try:
             form_data = await self.fetch_form_data(form_id)
-
+            await self.fetch_form_status_complete(form_id, "pending")
             non_form_fields =['status', 'error', 'retryAtempts', 'createdAt', 'updatedAt']
             cleaned_data = {k: v
             for k, v in form_data.items() if k not in non_form_fields}
             cleaned_data = self.convert_keys(cleaned_data)
             form_data_instance = FormData( ** cleaned_data)
             await automate_form_fill_new(form_data_instance)
-            await self.fetch_form_status_complete(form_id)
+            await self.fetch_form_status_complete(form_id, "completed")
 
         except Exception as e:
             logger.error("we failed submission")
+            await self.fetch_form_status_complete(form_id, "retry")
             raise e
 
 
@@ -132,7 +134,7 @@ class RabbitMQConsumer:
             "signature": data.get("signature"),
             "id": data.get("id"),
         }
-    def process_message(self, ch, method, properties, body):
+    async def process_message(self, ch, method, properties, body):
         retry_count = properties.headers.get('retry_count', 0)
         try:
             message = json.loads(body)
@@ -158,6 +160,8 @@ class RabbitMQConsumer:
             else:
                 # Message exceeded retries - reject without requeuing
                 # It will go to the dead letter exchange if configured
+                logger.error(f"Message exceeded retries - rejecting without requeuing: {str(e)}")
+                await self.fetch_form_status_complete(form_id, "failed")
                 ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
 
     def start_consuming(self):

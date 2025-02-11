@@ -35,6 +35,7 @@ class Config:
     BACKEND_URL = os.getenv('BACKEND_URL', 'http://localhost:3000')
 
     CAPSOLVER_API_KEY = os.getenv('CAPSOLVER_API_KEY', "") 
+    API_KEY = os.getenv('API_KEY', "")
 
     @classmethod
     def get_rabbitmq_params(cls):

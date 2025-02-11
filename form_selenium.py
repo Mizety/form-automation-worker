@@ -198,11 +198,12 @@ class FormFiller:
                         add_additional.click()
                         self.driver.find_element(By.CSS_SELECTOR, "div.field.inline-branch input[name='url_box3']").send_keys(
                             url)  # Fill new field
-                if data.is_related_to_media:
-                    self.click_checkbox("input#is_geo_ugc_imagery--yes")
-                else:
-                    self.click_checkbox("input#is_geo_ugc_imagery--no")
-
+            
+            if data.is_related_to_media:
+                self.click_checkbox("input#is_geo_ugc_imagery--yes")
+            else:
+                 self.click_checkbox("input#is_geo_ugc_imagery--no")
+        
 
             # Fill explanations
             self.driver.find_element(By.CSS_SELECTOR, '#legalother_explain_googlemybusiness_not_germany').send_keys(data.question_one)
