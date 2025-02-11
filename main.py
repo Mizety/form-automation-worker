@@ -134,7 +134,7 @@ class RabbitMQConsumer:
             "signature": data.get("signature"),
             "id": data.get("id"),
         }
-    async def process_message(self, ch, method, properties, body):
+    def process_message(self, ch, method, properties, body):
         retry_count = properties.headers.get('retry_count', 0)
         try:
             message = json.loads(body)
@@ -161,7 +161,10 @@ class RabbitMQConsumer:
                 # Message exceeded retries - reject without requeuing
                 # It will go to the dead letter exchange if configured
                 logger.error(f"Message exceeded retries - rejecting without requeuing: {str(e)}")
-                await self.fetch_form_status_complete(form_id, "failed")
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                loop.run_until_complete(self.fetch_form_status_complete(form_id, "failed"))
+                loop.close()
                 ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
 
     def start_consuming(self):
