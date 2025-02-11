@@ -5,3 +5,8 @@
 .env
 
 *.log
+
+form_automation.log
+.DS_Store
+.idea
+__pycache__

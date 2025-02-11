@@ -1,4 +1,6 @@
-version: "3"
+# Remove or comment out the version line if it exists
+# version: "3.8"  
+
 services:
   python-app:
     build:
