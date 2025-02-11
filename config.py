@@ -1,5 +1,3 @@
-import ssl
-
 import pika
 from dotenv import load_dotenv
 import os
@@ -35,6 +33,8 @@ class Config:
     LOG_FILE = os.getenv('LOG_FILE', 'form_automation.log')
 
     BACKEND_URL = os.getenv('BACKEND_URL', 'http://localhost:3000')
+
+    CAPSOLVER_API_KEY = os.getenv('CAPSOLVER_API_KEY', "") 
 
     @classmethod
     def get_rabbitmq_params(cls):
