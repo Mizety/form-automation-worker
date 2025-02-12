@@ -10,3 +10,6 @@ form_automation.log
 .DS_Store
 .idea
 __pycache__
+
+user_data
+user_data_2

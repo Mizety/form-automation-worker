@@ -9,7 +9,7 @@ import aiohttp
 import sys
 
 from config import Config
-from form_selenium import automate_form_fill_new, FormData
+from form_playwright import automate_form_fill_new, FormData
 
 
 logging.basicConfig(
