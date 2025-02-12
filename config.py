@@ -17,7 +17,7 @@ class Config:
     CAPSOLVER_WEBSITE_KEY = os.getenv('CAPSOLVER_WEBSITE_KEY')
 
     # Max workers
-    MAX_WORKERS = int(os.getenv('MAX_WORKERS', 1))
+    MAX_WORKERS = int(os.getenv('MAX_WORKERS', 2))
 
     # Form
     FORM_URL = os.getenv('FORM_URL')

@@ -7,14 +7,14 @@ services:
       - .:/app
     working_dir: /app
     command: >
-      sh -c "python config_extension.py && python main.py"
+      sh -c "python config_extension.py && xvfb-run --auto-servernum --server-args='-screen 0 1920x1080x24' python main.py"
     environment:
       - PYTHONUNBUFFERED=1
     env_file:
       - .env
     networks:
       - app-network
-  
+
 networks:
   app-network:
     driver: bridge

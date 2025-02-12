@@ -211,7 +211,7 @@ class LegalFormFiller:
 
             await self.page.fill('#signature', data.signature)
 
-            logger.info("Form filled successfully")
+            logger.info("Form filled successfully but yet to submit")
 
         except Exception as e:
             logger.error(f"Error filling form: {str(e)}")
@@ -223,7 +223,7 @@ class LegalFormFiller:
             )
             raise
 
-    async def submit_form(self):
+    async def submit_form(self, screenshot_path: str = None):
         try:
             try:
                 await self.page.click('button.submit-button')
@@ -238,6 +238,7 @@ class LegalFormFiller:
                     await self.page.wait_for_selector('.confirmation-message:not(.hidden)', timeout=10000)
                     logger.info("Form submitted successfully after captcha")
                 except Exception as e:
+                    await self.page.screenshot(path=screenshot_path)
                     logger.error(f"Failed to submit form after captcha: {str(e)}")
                     raise
                  
@@ -256,7 +257,7 @@ async def automate_form_fill_new(data: FormData):
     
     # Get absolute path to extension directory
     extension_path = os.path.abspath('./extension')
-    user_data_dir = os.path.abspath('./user_data')
+    user_data_dir = os.path.abspath('./user_data' + data.id)
     
     user_agent_strings = [
         "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36",
@@ -268,35 +269,40 @@ async def automate_form_fill_new(data: FormData):
     ]
     browser = await playwright.chromium.launch_persistent_context(
         user_data_dir=user_data_dir,
-        headless=False,
+        headless=Config.BROWSER_HEADLESS,
         args=[f'--disable-extensions-except={extension_path}',
               f'--load-extension={extension_path}'],
         user_agent=random.choice(user_agent_strings),
-        locale="de-DE"
+        locale="de-DE",
+        
     )
  
     # Add browser extension
     
     try:
-         
         page = await browser.new_page()
-    
+
         # Navigate to form
         await page.goto(Config.FORM_URL, wait_until='networkidle')
-        await page.wait_for_timeout(2000)  # Ensure page is fully loaded
+        await page.wait_for_timeout(1000)  # Ensure page is fully loaded
 
         form_filler = LegalFormFiller(page)
         await form_filler.fill_form(data)
         await page.wait_for_timeout(2000)
-        await form_filler.submit_form()
-        await page.wait_for_timeout(10000)
+        await form_filler.submit_form(screenshot_path="images/"+data.id+".png")
 
     except Exception as e:
         logger.error(f"Error automating form fill: {str(e)}")
         raise
     finally:
         await browser.close()
+        await remove_user_data_dir(user_data_dir)
         await playwright.stop()
+
+async def remove_user_data_dir(directory):
+    import shutil
+    if os.path.exists(directory):
+        shutil.rmtree(directory)
 
 def main():
     # Testing data. Replace with actual data

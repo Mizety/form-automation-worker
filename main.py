@@ -143,11 +143,12 @@ class RabbitMQConsumer:
             if not form_id:
                 raise ValueError("No form ID in message")
 
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
+            asyncio.run(self.process_form_with_limit(form_id, retry_count))
+            # loop = asyncio.new_event_loop()
+            # asyncio.set_event_loop(loop)
 
-            loop.run_until_complete(self.process_form_with_limit(form_id, retry_count))
-            loop.close()
+            # loop.run_until_complete(self.process_form_with_limit(form_id, retry_count))
+            # loop.close()
 
             ch.basic_ack(delivery_tag=method.delivery_tag)
             logger.info(f"Successfully processed form {form_id}")
@@ -161,10 +162,11 @@ class RabbitMQConsumer:
                 # Message exceeded retries - reject without requeuing
                 # It will go to the dead letter exchange if configured
                 logger.error(f"Message exceeded retries - rejecting without requeuing: {str(e)}")
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-                loop.run_until_complete(self.fetch_form_status_complete(form_id, "failed"))
-                loop.close()
+                asyncio.run(self.fetch_form_status_complete(form_id, "failed"))
+                # loop = asyncio.new_event_loop()
+                # asyncio.set_event_loop(loop)
+                # loop.run_until_complete(self.fetch_form_status_complete(form_id,))
+                # loop.close()
                 ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
 
     def start_consuming(self):
