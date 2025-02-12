@@ -115,7 +115,7 @@ class LegalFormFiller:
             })
             logger.error(f"Failed to select language: {str(e)}")
 
-    async def fill_form(self, data: FormData) -> None:
+    async def fill_form(self, data: FormData, screenshot_path: str = None) -> None:
         try:
 
             # Select language
@@ -189,12 +189,12 @@ class LegalFormFiller:
                         await add_additional.click(force=True)
                         await self.page.locator("div.field.inline-branch input[name='url_box3']").nth(i).fill(
                             url)  # Fill new field
-            if data.is_related_to_media:
-                     ugcy = self.page.locator("label[for='is_geo_ugc_imagery--yes']")
-                     await ugcy.click(force=True)
-            else:
-                    ugcn = self.page.locator("label[for='is_geo_ugc_imagery--no']")
-                    await ugcn.click(force=True)
+                if data.is_related_to_media:
+                        ugcy = self.page.locator("label[for='is_geo_ugc_imagery--yes']")
+                        await ugcy.click(force=True)
+                else:
+                        ugcn = self.page.locator("label[for='is_geo_ugc_imagery--no']")
+                        await ugcn.click(force=True)
 
 
             # Fill explanations
@@ -215,6 +215,7 @@ class LegalFormFiller:
 
         except Exception as e:
             logger.error(f"Error filling form: {str(e)}")
+            await self.page.screenshot(path=screenshot_path)
             self.errors.append(
                 {
                     'message': f"Error filling form: {str(e)}",
@@ -271,9 +272,20 @@ async def automate_form_fill_new(data: FormData):
         user_data_dir=user_data_dir,
         headless=Config.BROWSER_HEADLESS,
         args=[f'--disable-extensions-except={extension_path}',
-              f'--load-extension={extension_path}'],
+              f'--load-extension={extension_path}'   
+                '--disable-gpu',  # Prevents GPU-related crashes in Docker
+                '--disable-dev-shm-usage',  # Avoids crashes due to small /dev/shm
+                '--no-sandbox',  # Required for running as root inside Docker
+                '--disable-setuid-sandbox',  # Avoids permission issues
+                '--disable-blink-features=AutomationControlled',  # Prevents detection as bot
+                '--disable-infobars',  # Removes "Chrome is being controlled by automated test software"
+                '--ignore-certificate-errors',  # Useful if the VPS has SSL issues
+                '--allow-running-insecure-content'  # Avoids mixed content blocking
+              ],
         user_agent=random.choice(user_agent_strings),
         locale="de-DE",
+        viewport={"width": 1920, "height": 1080}
+
         
     )
  
@@ -287,9 +299,9 @@ async def automate_form_fill_new(data: FormData):
         await page.wait_for_timeout(1000)  # Ensure page is fully loaded
 
         form_filler = LegalFormFiller(page)
-        await form_filler.fill_form(data)
+        await form_filler.fill_form(data, screenshot_path="images/type_1_"+data.id+".png")
         await page.wait_for_timeout(2000)
-        await form_filler.submit_form(screenshot_path="images/"+data.id+".png")
+        # await form_filler.submit_form(screenshot_path="images/type_2_"+data.id+".png")
 
     except Exception as e:
         logger.error(f"Error automating form fill: {str(e)}")
