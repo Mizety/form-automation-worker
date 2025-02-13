@@ -106,6 +106,8 @@ class LegalFormFiller:
 
             # Wait for dropdown to close
             await self.page.wait_for_selector('div.language-selector-select[aria-expanded="false"]', timeout=5000)
+            await self.page.screenshot(path="images/language_selected.png")
+            await self.page.wait_for_timeout(1000)
             logger.info(f"Selected language: {language}")
 
         except Exception as e:
@@ -141,16 +143,20 @@ class LegalFormFiller:
             # Handle child abuse content section
             if eu and data.is_child_abuse_content:
                 confim_cbc = self.page.locator("input#confirm_violate_csae_laws--confirm")
+                await confim_cbc.scroll_into_view_if_needed()
                 await confim_cbc.check(force=True)
-
+            await self.page.wait_for_timeout(1000)
             # Fill personal information
             if eu and data.is_child_abuse_content and data.remove_child_abuse_content:
                 confirm_anc = self.page.locator("input#confirm_to_report_anonymous--confirm")
+                await confirm_anc.scroll_into_view_if_needed()
                 await confirm_anc.click(force=True)
                 
                 name_locator = self.page.locator('#full_name_not_required')
-                email_locator = self.page.locator('#contact_email_not_required')
+                await name_locator.scroll_into_view_if_needed()
                 await name_locator.fill(data.full_legal_name)
+                email_locator = self.page.locator('#contact_email_not_required')
+                await email_locator.scroll_into_view_if_needed()
                 await email_locator.fill(data.email)
             else:
                 name_locator = self.page.locator('#full_name')
@@ -159,12 +165,15 @@ class LegalFormFiller:
                 await email_locator.fill(data.email)
 
             company_name_locator = self.page.locator('#companyname')
-            company_represent_locator = self.page.locator('#representedrightsholder')
+            await company_name_locator.scroll_into_view_if_needed()
             await company_name_locator.fill(data.company_name)
+            await self.page.wait_for_timeout(1000)
+            company_represent_locator = self.page.locator('#representedrightsholder')
+            await company_represent_locator.scroll_into_view_if_needed()
             await company_represent_locator.fill(data.company_you_represent)
 
             variant = self.is_special_country(country_name)
-
+            await self.page.wait_for_timeout(1000)
             if variant:
                 country_name_english = "Germany"
                 # German form does not have some fields
@@ -196,32 +205,41 @@ class LegalFormFiller:
                         await add_additional.click(force=True)
                         await self.page.locator("div.field.inline-branch input[name='url_box3']").nth(i).fill(
                             url)  # Fill new field
-                if data.is_related_to_media:
-                        ugcy = self.page.locator("label[for='is_geo_ugc_imagery--yes']")
-                        await ugcy.click(force=True)
-                else:
-                        ugcn = self.page.locator("label[for='is_geo_ugc_imagery--no']")
-                        await ugcn.click(force=True)
+            if data.is_related_to_media:
+                if self.page.locator("label[for='is_geo_ugc_imagery--yes']").is_visible():
+                    ugcy = self.page.locator("label[for='is_geo_ugc_imagery--yes']")
+                    await ugcy.click(force=True)
+            else:
+                if self.page.locator("label[for='is_geo_ugc_imagery--no']").is_visible():
+                    ugcn = self.page.locator("label[for='is_geo_ugc_imagery--no']")
+                    await ugcn.click(force=True)
 
-
+            await self.page.wait_for_timeout(1000)
             # Fill explanations using locators
             q1_locator = self.page.locator('#legalother_explain_googlemybusiness_not_germany')
-            q2_locator = self.page.locator('#legalother_quote')
-            q3_locator = self.page.locator('#legalother_quote_googlemybusiness_not_germany')
-
+            await q1_locator.scroll_into_view_if_needed()
             await q1_locator.fill(data.question_one)
-            await q2_locator.fill(data.question_two)
-            await q3_locator.fill(data.question_three)
 
+            q2_locator = self.page.locator('#legalother_quote')
+            await q2_locator.scroll_into_view_if_needed()
+            await q2_locator.fill(data.question_two)
+
+            q3_locator = self.page.locator('#legalother_quote_googlemybusiness_not_germany')
+            await q3_locator.scroll_into_view_if_needed()
+            await q3_locator.fill(data.question_three)
+            await self.page.wait_for_timeout(1000)
             if(data.send_notice_to_author == False):
                 mcs = self.page.locator("input#fwd_notice_consent--disagree")
+                await mcs.scroll_into_view_if_needed()
                 await mcs.click(force=True)
             # Handle confirmation and signature
             if data.confirm_form:
                 lcs = self.page.locator("input#legal_consent_statement--agree")
+                await lcs.scroll_into_view_if_needed()
                 await lcs.click(force=True)
-
+            await self.page.wait_for_timeout(1000)
             signature_locator = self.page.locator('#signature')
+            await signature_locator.scroll_into_view_if_needed()
             await signature_locator.fill(data.signature)
 
             logger.info("Form filled successfully but yet to submit")
@@ -243,6 +261,7 @@ class LegalFormFiller:
             confirmation_message = self.page.locator('.confirmation-message:not(.hidden)')
                 
             try:
+                await submit_button.scroll_into_view_if_needed()
                 await submit_button.click()
                 await confirmation_message.wait_for(timeout=10000)
                 logger.info("Form submitted successfully")
@@ -250,7 +269,8 @@ class LegalFormFiller:
                 logger.info("Timeout occurred - likely due to captcha")
                 # Try submitting again
                 try:
-                    time.sleep(12)
+                    await self.page.wait_for_timeout(10000)
+                    await submit_button.scroll_into_view_if_needed()
                     await submit_button.click()
                     await confirmation_message.wait_for(timeout=10000)
                     logger.info("Form submitted successfully after captcha")
@@ -312,9 +332,10 @@ async def automate_form_fill_new(data: FormData):
     
     try:
         page = await browser.new_page()
-
+        
         # Navigate to form
         await page.goto(Config.FORM_URL, wait_until='networkidle')
+        print(await page.content())
         await page.wait_for_timeout(1000)  # Ensure page is fully loaded
 
         form_filler = LegalFormFiller(page)
