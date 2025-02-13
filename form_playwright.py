@@ -198,9 +198,9 @@ class LegalFormFiller:
 
 
             # Fill explanations
-            await self.page.fill('#legalother_explain_googlemybusiness_not_germany', data.question_one)
-            await self.page.fill('#legalother_quote', data.question_two)
-            await self.page.fill('#legalother_quote_googlemybusiness_not_germany', data.question_three)
+            # await self.page.fill('#legalother_explain_googlemybusiness_not_germany', data.question_one)
+            # await self.page.fill('#legalother_quote', data.question_two)
+            # await self.page.fill('#legalother_quote_googlemybusiness_not_germany', data.question_three)
             if(data.send_notice_to_author == False):
                 mcs = self.page.locator("input#fwd_notice_consent--disagree")
                 await mcs.click(force=True)
