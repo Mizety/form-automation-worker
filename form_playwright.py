@@ -226,7 +226,7 @@ class LegalFormFiller:
             await q2_locator.scroll_into_view_if_needed()
             await q2_locator.fill(data.question_two)
 
-            query_q3 = f'textarea#legalother_quote_googlemybusiness{suffix}]'
+            query_q3 = f'textarea#legalother_quote_googlemybusiness{suffix}'
             q3_locator = self.page.locator(query_q3)
             await q3_locator.scroll_into_view_if_needed()
             await q3_locator.fill(data.question_three)
