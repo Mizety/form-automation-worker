@@ -217,16 +217,16 @@ class LegalFormFiller:
             await self.page.wait_for_timeout(1000)
             # Fill explanations using locators
             suffix = "_not_germany" if not variant else ""
-            query_q1 = f'input#legalother_explain_googlemybusiness{suffix}'
+            query_q1 = f'textarea#legalother_explain_googlemybusiness{suffix}'
             q1_locator = self.page.locator(query_q1)
             await q1_locator.scroll_into_view_if_needed()
             await q1_locator.fill(data.question_one)
 
-            q2_locator = self.page.locator('input#legalother_quote')
+            q2_locator = self.page.locator('textarea#legalother_quote')
             await q2_locator.scroll_into_view_if_needed()
             await q2_locator.fill(data.question_two)
 
-            query_q3 = f'input#legalother_quote_googlemybusiness{suffix}]'
+            query_q3 = f'textarea#legalother_quote_googlemybusiness{suffix}]'
             q3_locator = self.page.locator(query_q3)
             await q3_locator.scroll_into_view_if_needed()
             await q3_locator.fill(data.question_three)
