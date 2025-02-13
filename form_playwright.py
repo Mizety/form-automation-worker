@@ -147,14 +147,21 @@ class LegalFormFiller:
             if eu and data.is_child_abuse_content and data.remove_child_abuse_content:
                 confirm_anc = self.page.locator("input#confirm_to_report_anonymous--confirm")
                 await confirm_anc.click(force=True)
-                await self.page.fill('#full_name_not_required', data.full_legal_name)
-                await self.page.fill('#contact_email_not_required', data.email)
+                
+                name_locator = self.page.locator('#full_name_not_required')
+                email_locator = self.page.locator('#contact_email_not_required')
+                await name_locator.fill(data.full_legal_name)
+                await email_locator.fill(data.email)
             else:
-                await self.page.fill('#full_name', data.full_legal_name)
-                await  self.page.fill('#contact_email_noprefill', data.email)
+                name_locator = self.page.locator('#full_name')
+                email_locator = self.page.locator('#contact_email_noprefill')
+                await name_locator.fill(data.full_legal_name)
+                await email_locator.fill(data.email)
 
-            await self.page.fill('#companyname', data.company_name)
-            await self.page.fill('#representedrightsholder', data.company_you_represent)
+            company_name_locator = self.page.locator('#companyname')
+            company_represent_locator = self.page.locator('#representedrightsholder')
+            await company_name_locator.fill(data.company_name)
+            await company_represent_locator.fill(data.company_you_represent)
 
             variant = self.is_special_country(country_name)
 
@@ -197,10 +204,15 @@ class LegalFormFiller:
                         await ugcn.click(force=True)
 
 
-            # Fill explanations
-            # await self.page.fill('#legalother_explain_googlemybusiness_not_germany', data.question_one)
-            # await self.page.fill('#legalother_quote', data.question_two)
-            # await self.page.fill('#legalother_quote_googlemybusiness_not_germany', data.question_three)
+            # Fill explanations using locators
+            q1_locator = self.page.locator('#legalother_explain_googlemybusiness_not_germany')
+            q2_locator = self.page.locator('#legalother_quote')
+            q3_locator = self.page.locator('#legalother_quote_googlemybusiness_not_germany')
+
+            await q1_locator.fill(data.question_one)
+            await q2_locator.fill(data.question_two)
+            await q3_locator.fill(data.question_three)
+
             if(data.send_notice_to_author == False):
                 mcs = self.page.locator("input#fwd_notice_consent--disagree")
                 await mcs.click(force=True)
@@ -209,7 +221,8 @@ class LegalFormFiller:
                 lcs = self.page.locator("input#legal_consent_statement--agree")
                 await lcs.click(force=True)
 
-            await self.page.fill('#signature', data.signature)
+            signature_locator = self.page.locator('#signature')
+            await signature_locator.fill(data.signature)
 
             logger.info("Form filled successfully but yet to submit")
 
@@ -226,17 +239,20 @@ class LegalFormFiller:
 
     async def submit_form(self, screenshot_path: str = None):
         try:
+            submit_button = self.page.locator('button.submit-button')
+            confirmation_message = self.page.locator('.confirmation-message:not(.hidden)')
+                
             try:
-                await self.page.click('button.submit-button')
-                await self.page.wait_for_selector('.confirmation-message:not(.hidden)', timeout=10000)
+                await submit_button.click()
+                await confirmation_message.wait_for(timeout=10000)
                 logger.info("Form submitted successfully")
             except TimeoutException:
                 logger.info("Timeout occurred - likely due to captcha")
                 # Try submitting again
                 try:
                     time.sleep(12)
-                    await self.page.click('button.submit-button')
-                    await self.page.wait_for_selector('.confirmation-message:not(.hidden)', timeout=10000)
+                    await submit_button.click()
+                    await confirmation_message.wait_for(timeout=10000)
                     logger.info("Form submitted successfully after captcha")
                 except Exception as e:
                     await self.page.screenshot(path=screenshot_path)
@@ -304,7 +320,7 @@ async def automate_form_fill_new(data: FormData):
         form_filler = LegalFormFiller(page)
         await form_filler.fill_form(data, screenshot_path="images/type_1_"+data.id+".png")
         await page.wait_for_timeout(2000)
-        # await form_filler.submit_form(screenshot_path="images/type_2_"+data.id+".png")
+        await form_filler.submit_form(screenshot_path="images/type_2_"+data.id+".png")
 
     except Exception as e:
         logger.error(f"Error automating form fill: {str(e)}")
