@@ -12,8 +12,6 @@ services:
       - PYTHONUNBUFFERED=1
     env_file:
       - .env
-    ports:
-      - "4444:4444"
     networks:
       - app-network
 

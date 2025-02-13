@@ -11,5 +11,3 @@ RUN python -m pip install -r requirements.txt
 COPY . .
 
 RUN playwright install --with-deps chromium
-
-EXPOSE 4444

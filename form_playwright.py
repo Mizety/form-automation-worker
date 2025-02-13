@@ -284,9 +284,12 @@ async def automate_form_fill_new(data: FormData):
               ],
         user_agent=random.choice(user_agent_strings),
         locale="de-DE",
-        viewport={"width": 1920, "height": 1080}
-
-        
+        viewport={"width": 1024, "height": 720 },
+        record_video_dir="videos",
+        record_video_size={
+            "width": 1024,
+            "height": 720
+        }
     )
  
     # Add browser extension

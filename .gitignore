@@ -13,3 +13,12 @@ __pycache__
 
 user_data
 user_data_2
+
+videos
+images
+
+*.png
+*.mp4
+*.log
+*.log.*
+*.log.*.*
