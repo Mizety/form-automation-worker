@@ -171,7 +171,7 @@ class LegalFormFiller:
             company_represent_locator = self.page.locator('#representedrightsholder')
             await company_represent_locator.scroll_into_view_if_needed()
             await company_represent_locator.fill(data.company_you_represent)
-
+            print(await self.page.content())
             variant = self.is_special_country(country_name)
             await self.page.wait_for_timeout(1000)
             if variant:
@@ -216,7 +216,9 @@ class LegalFormFiller:
 
             await self.page.wait_for_timeout(1000)
             # Fill explanations using locators
-            q1_locator = self.page.locator('#legalother_explain_googlemybusiness_not_germany')
+            suffix = "_not_germany" if not variant else ""
+            query_q1 = f'input[name="legalother_explain_googlemybusiness{suffix}"]'
+            q1_locator = self.page.locator(query_q1)
             await q1_locator.scroll_into_view_if_needed()
             await q1_locator.fill(data.question_one)
 
@@ -224,7 +226,8 @@ class LegalFormFiller:
             await q2_locator.scroll_into_view_if_needed()
             await q2_locator.fill(data.question_two)
 
-            q3_locator = self.page.locator('#legalother_quote_googlemybusiness_not_germany')
+            query_q3 = f'input[name="legalother_quote_googlemybusiness{suffix}"]'
+            q3_locator = self.page.locator(query_q3)
             await q3_locator.scroll_into_view_if_needed()
             await q3_locator.fill(data.question_three)
             await self.page.wait_for_timeout(1000)
@@ -335,7 +338,7 @@ async def automate_form_fill_new(data: FormData):
         
         # Navigate to form
         await page.goto(Config.FORM_URL, wait_until='networkidle')
-        print(await page.content())
+       
         await page.wait_for_timeout(1000)  # Ensure page is fully loaded
 
         form_filler = LegalFormFiller(page)
