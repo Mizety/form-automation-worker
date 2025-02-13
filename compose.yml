@@ -13,7 +13,7 @@ services:
     env_file:
       - .env
     ports:
-      - "3000:3000"
+      - "4444:4444"
     networks:
       - app-network
 

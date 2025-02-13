@@ -12,4 +12,4 @@ COPY . .
 
 RUN playwright install --with-deps chromium
 
-EXPOSE 3000
+EXPOSE 4444
