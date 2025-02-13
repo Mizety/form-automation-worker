@@ -206,13 +206,13 @@ class LegalFormFiller:
                         await self.page.locator("div.field.inline-branch input[name='url_box3']").nth(i).fill(
                             url)  # Fill new field
             if data.is_related_to_media:
-                if self.page.locator("label[for='is_geo_ugc_imagery--yes']").is_visible():
-                    ugcy = self.page.locator("label[for='is_geo_ugc_imagery--yes']")
-                    await ugcy.click(force=True)
+                ugcyes = self.page.locator("label[for='is_geo_ugc_imagery--yes']")
+                if await ugcyes.is_visible():
+                    await ugcyes.click(force=True)
             else:
-                if self.page.locator("label[for='is_geo_ugc_imagery--no']").is_visible():
-                    ugcn = self.page.locator("label[for='is_geo_ugc_imagery--no']")
-                    await ugcn.click(force=True)
+                ngcno = self.page.locator("label[for='is_geo_ugc_imagery--no']")
+                if await ngcno.is_visible():
+                    await ngcno.click(force=True)
 
             await self.page.wait_for_timeout(1000)
             # Fill explanations using locators
