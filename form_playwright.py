@@ -117,7 +117,7 @@ class LegalFormFiller:
             })
             logger.error(f"Failed to select language: {str(e)}")
 
-    async def fill_form(self, data: FormData, screenshot_path: str = None) -> None:
+    async def fill_form(self, data: FormData, screenshot_path: str = None, variantGermany: bool = True) -> None:
         try:
 
             # Select language
@@ -171,10 +171,10 @@ class LegalFormFiller:
             company_represent_locator = self.page.locator('#representedrightsholder')
             await company_represent_locator.scroll_into_view_if_needed()
             await company_represent_locator.fill(data.company_you_represent)
-            print(await self.page.content())
+            # print(await self.page.content())
             variant = self.is_special_country(country_name)
             await self.page.wait_for_timeout(1000)
-            if variant:
+            if variant or variantGermany:
                 country_name_english = "Germany"
                 # German form does not have some fields
                 search_query = f'input[name="url_box3_geo_{country_name_english.lower()}"]'
@@ -216,7 +216,7 @@ class LegalFormFiller:
 
             await self.page.wait_for_timeout(1000)
             # Fill explanations using locators
-            suffix = "_not_germany" if not variant else ""
+            suffix = "_not_germany" if not variantGermany else ""
             query_q1 = f'textarea#legalother_explain_googlemybusiness{suffix}'
             q1_locator = self.page.locator(query_q1)
             await q1_locator.scroll_into_view_if_needed()
@@ -342,7 +342,7 @@ async def automate_form_fill_new(data: FormData):
         await page.wait_for_timeout(1000)  # Ensure page is fully loaded
 
         form_filler = LegalFormFiller(page)
-        await form_filler.fill_form(data, screenshot_path="images/type_1_"+data.id+".png")
+        await form_filler.fill_form(data, screenshot_path="images/type_1_"+data.id+".png", variantGermany=Config.VARIANT_GERMANY)
         await page.wait_for_timeout(2000)
         await form_filler.submit_form(screenshot_path="images/type_2_"+data.id+".png")
 

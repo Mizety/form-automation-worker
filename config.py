@@ -27,7 +27,7 @@ class Config:
     # Browser
     BROWSER_HEADLESS = os.getenv('BROWSER_HEADLESS', 'true').lower() == 'true'
     BROWSER_TIMEOUT = int(os.getenv('BROWSER_TIMEOUT', 30000))
-
+    VARIANT_GERMANY = os.getenv('VARIANT_GERMANY', 'true').lower() == 'true'
     # Logging
     LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
     LOG_FILE = os.getenv('LOG_FILE', 'form_automation.log')
