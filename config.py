@@ -26,7 +26,7 @@ class Config:
     # Form
     FORM_URL = os.getenv('FORM_URL')
     MAX_RETRIES = int(os.getenv('MAX_RETRIES', 3))
-    RETRY_DELAY = int(os.getenv('RETRY_DELAY', 2))
+    RETRY_DELAY = int(os.getenv('RETRY_DELAY', 20000))
 
     # Browser
     BROWSER_HEADLESS = os.getenv('BROWSER_HEADLESS', 'true').lower() == 'true'

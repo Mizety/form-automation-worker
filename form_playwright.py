@@ -139,6 +139,7 @@ class LegalFormFiller:
                 except Exception as e:
                     logger.warning(f"Failed to select country: {str(e)}. Retrying...")
 
+            await self.page.wait_for_timeout(3000)
             eu = self.is_eu_member(country_name)
             # Handle child abuse content section
             if eu and data.is_child_abuse_content:
@@ -272,10 +273,10 @@ class LegalFormFiller:
                 logger.info("Timeout occurred - likely due to captcha")
                 # Try submitting again
                 try:
-                    await self.page.wait_for_timeout(10000)
+                    await self.page.wait_for_timeout(15000)
                     await submit_button.scroll_into_view_if_needed()
                     await submit_button.click()
-                    await confirmation_message.wait_for(timeout=10000)
+                    await confirmation_message.wait_for(timeout=12000)
                     logger.info("Form submitted successfully after captcha")
                 except Exception as e:
                     await self.page.screenshot(path=screenshot_path)
@@ -293,7 +294,7 @@ class LegalFormFiller:
             raise
 
 async def automate_form_fill_new(data: FormData):
-    
+
     # Get absolute path to extension directory
     extension_path = os.path.abspath('./extension')
     user_data_dir = os.path.abspath('./users/user_data' + data.id)

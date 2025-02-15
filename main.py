@@ -156,8 +156,21 @@ class RabbitMQConsumer:
         except Exception as e:
             logger.error(f"Error processing message: {str(e)}")
             if retry_count < Config.MAX_RETRIES:
-                # Requeue the message for retry
-                ch.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
+                    # Requeue the message for retry
+                    updated_message = json.dumps(message)
+                    updated_properties = pika.BasicProperties(
+                        headers={'retry_count': retry_count + 1},
+                        expiration=str(Config.RETRY_DELAY)
+                    )
+
+                    ch.basic_publish(
+                        exchange='',
+                        routing_key=self.queue_name,
+                        body=updated_message,
+                        properties=updated_properties
+                    )
+
+                    ch.basic_ack(delivery_tag=method.delivery_tag)
             else:
                 # Message exceeded retries - reject without requeuing
                 # It will go to the dead letter exchange if configured
