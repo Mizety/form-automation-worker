@@ -41,22 +41,10 @@ class RabbitMQConsumer:
             )
             self.connection = pika.BlockingConnection(parameters)
             self.channel = self.connection.channel()
-
-            self.channel.exchange_declare(
-                exchange='retry_exchange',
-                exchange_type='direct',
-                durable=True
-            )
-
-            queue_args = {
-                'x-dead-letter-exchange': 'retry_exchange',
-                'x-dead-letter-routing-key': 'retry'
-            }
-
+        
             self.channel.queue_declare(
                 queue=self.queue_name,
                 durable=True,
-                arguments=queue_args
             )
             logger.info("Successfully connected to RabbitMQ")
         except Exception as e:
