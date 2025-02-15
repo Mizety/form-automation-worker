@@ -7,7 +7,7 @@ load_dotenv()
 
 class Config:
     # RabbitMQ
-    RABBITMQ_URL = os.getenv('RABBITMQ_URL', 'amqp://guest:guest@localhost:5672/%2F')
+    RABBITMQ_URL = os.getenv('RABBITMQ_URL')
     RABBITMQ_QUEUE = os.getenv('RABBITMQ_QUEUE', 'FORM_QUEUE_SERVICE')
     RABBITMQ_EXCHANGE = os.getenv('RABBITMQ_EXCHANGE', '')
     RABBITMQ_ROUTING_KEY = os.getenv('RABBITMQ_ROUTING_KEY', 'FORM_QUEUE_SERVICE')
@@ -41,10 +41,11 @@ class Config:
     def get_rabbitmq_params(cls):
         """Parse AMQP URL and return connection parameters"""
         url = urlparse(cls.RABBITMQ_URL)
+        print(url)
         return {
             'host': url.hostname,
-            'port': 5672,
-            'virtual_host': url.path[1:],
+            'port': url.port,
+            'virtual_host': url.path[1:] or "/",
             'credentials': pika.PlainCredentials(url.username, url.password),
             'ssl_options': None
         }
