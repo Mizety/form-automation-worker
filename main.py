@@ -37,7 +37,7 @@ class RabbitMQConsumer:
             parameters = pika.ConnectionParameters(
                 **Config.get_rabbitmq_params(),
                 heartbeat=600,
-                blocked_connection_timeout=300
+                blocked_connection_timeout=3000
             )
             self.connection = pika.BlockingConnection(parameters)
             self.channel = self.connection.channel()
@@ -122,7 +122,17 @@ class RabbitMQConsumer:
             "signature": data.get("signature"),
             "id": data.get("id"),
         }
-    def process_message(self, ch, method, properties, body):
+    
+    def on_message_callback_wrapper(self, ch, method, properties, body):
+    # Ensure the async processing runs in the event loop
+        try:
+            asyncio.run(self.process_message(ch, method, properties, body))
+        except Exception as e:
+            logger.error(f"Error in message consumption: {str(e)}")
+            if self.connection and not self.connection.is_closed:
+                self.connection.close()
+
+    async def process_message(self, ch, method, properties, body):
         retry_count = properties.headers.get('retry_count', 0)
         try:
             message = json.loads(body)
@@ -131,13 +141,8 @@ class RabbitMQConsumer:
             if not form_id:
                 raise ValueError("No form ID in message")
 
-            asyncio.run(self.process_form_with_limit(form_id, retry_count))
-            # loop = asyncio.new_event_loop()
-            # asyncio.set_event_loop(loop)
-
-            # loop.run_until_complete(self.process_form_with_limit(form_id, retry_count))
-            # loop.close()
-
+            await self.process_form_with_limit(form_id, retry_count)
+            
             ch.basic_ack(delivery_tag=method.delivery_tag)
             logger.info(f"Successfully processed form {form_id}")
 
@@ -163,32 +168,37 @@ class RabbitMQConsumer:
                 # Message exceeded retries - reject without requeuing
                 # It will go to the dead letter exchange if configured
                 logger.error(f"Message exceeded retries - rejecting without requeuing: {str(e)}")
-                asyncio.run(self.fetch_form_status_complete(form_id, "failed"))
-                # loop = asyncio.new_event_loop()
-                # asyncio.set_event_loop(loop)
-                # loop.run_until_complete(self.fetch_form_status_complete(form_id,))
-                # loop.close()
+                # await self.fetch_form_status_complete(form_id, "failed")
+                await self.fetch_form_status_complete(form_id, "failed")
                 ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
 
-    def start_consuming(self):
+    async def start_consuming(self):
         try:
+            loop = asyncio.get_event_loop()
             self.channel.basic_qos(prefetch_count=1)
             self.channel.basic_consume(
                 queue=self.queue_name,
-                on_message_callback=self.process_message
+                on_message_callback=self.on_message_callback_wrapper
             )
+            await loop.run_in_executor(None, self.channel.start_consuming)
             logger.info("Started consuming messages")
-            self.channel.start_consuming()
+            # self.channel.start_consuming()
         except Exception as e:
             logger.error(f"Error in message consumption: {str(e)}")
             if self.connection and not self.connection.is_closed:
                 self.connection.close()
-
+    async def start_async_consuming(self):
+        try:
+            await self.start_consuming()
+        except Exception as e:
+            logger.error(f"Error in async consumption: {str(e)}")
+            if self.connection and not self.connection.is_closed:
+                self.connection.close()
 
 if __name__ == "__main__":
     try:
         consumer = RabbitMQConsumer()
-        consumer.start_consuming()
+        asyncio.run(consumer.start_async_consuming())
     except KeyboardInterrupt:
         logger.info("Shutting down consumer")
         sys.exit(0)
