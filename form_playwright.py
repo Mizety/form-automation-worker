@@ -153,12 +153,12 @@ class LegalFormFiller:
                 await confirm_anc.scroll_into_view_if_needed()
                 await confirm_anc.click(force=True)
                 
-                name_locator = self.page.locator('#full_name_not_required')
+                name_locator = self.page.locator('#full_name')
                 await name_locator.scroll_into_view_if_needed()
                 await name_locator.fill(data.full_legal_name)
-                email_locator = self.page.locator('#contact_email_not_required')
-                await email_locator.scroll_into_view_if_needed()
-                await email_locator.fill(data.email)
+                # email_locator = self.page.locator('#contact_email_not_required')
+                # await email_locator.scroll_into_view_if_needed()
+                # await email_locator.fill(data.email)
             else:
                 name_locator = self.page.locator('#full_name')
                 email_locator = self.page.locator('#contact_email_noprefill')
@@ -176,36 +176,38 @@ class LegalFormFiller:
             variant = self.is_special_country(country_name)
             await self.page.wait_for_timeout(1000)
             if variant or variantGermany:
-                country_name_english = "Germany"
                 # German form does not have some fields
-                search_query = f'input[name="url_box3_geo_{country_name_english.lower()}"]'
+                search_query = f'input[name="url_box3_geo_reviews"]'
 
                 for i, url in enumerate(data.infringing_urls):
                     locate = self.page.locator(search_query)
                     if i == 0:
                         await locate.fill(url)
                     else:
-                        specifier = ''
-                        sub_specifier = '_2'
-                        if i > 1:
-                            specifier = f'_{i}'
-                            sub_specifier = f'_{i+1}'
-                        search_sub_query = f'input[name="url_box3_googlemybusiness{sub_specifier}"]'
-                        add_checkbox = self.page.locator(f'input#add_another_url_checkbox{specifier}--add')
-                        await add_checkbox.check(force=True)
-                        await self.page.fill(search_sub_query, url)
-            else:
-                url_fields = self.page.locator("div.field.inline-branch input[name='url_box3']")
+                        search_sub_query = f'input[name="url_box3_geo_reviews"]'
+                        add_checkbox = self.page.locator('div[data-frd-identifier="IDENTIFIER_LEGAL_REMOVALS_TARGET"]').locator("a.add-additional").first
 
-                # Ensure the number of input fields matches the number of URLs
-                for i, url in enumerate(data.infringing_urls):
-                    if i < url_fields.count():
-                        await url_fields.nth(i).fill(url)  # Fill the existing field
-                    else:
-                        add_additional = self.page.locator("a.add-additional").first  # Click "Add additional field" button
-                        await add_additional.click(force=True)
-                        await self.page.locator("div.field.inline-branch input[name='url_box3']").nth(i).fill(
-                            url)  # Fill new field
+                        if await add_checkbox.is_visible():
+                            await add_checkbox.click(
+                                force=True
+                            )
+                        else:
+                            print("Button is not visible!")
+                        
+                        await self.page.locator(search_sub_query).nth(i).fill(url)
+                        # await self.page.fill(search_sub_query, url)
+            # else:
+                # url_fields = self.page.locator("div.field.inline-branch input[name='url_box3']")
+
+                # # Ensure the number of input fields matches the number of URLs
+                # for i, url in enumerate(data.infringing_urls):
+                #     if i < url_fields.count():
+                #         await url_fields.nth(i).fill(url)  # Fill the existing field
+                #     else:
+                #         add_additional = self.page.locator("a.add-additional").first  # Click "Add additional field" button
+                #         await add_additional.click(force=True)
+                #         await self.page.locator("div.field.inline-branch input[name='url_box3']").nth(i).fill(
+                #             url)  # Fill new field
             if data.is_related_to_media:
                 ugcyes = self.page.locator("label[for='is_geo_ugc_imagery--yes']")
                 if await ugcyes.is_visible():
