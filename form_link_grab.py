@@ -1,6 +1,5 @@
 import random
 import sys
-import time
 
 from playwright.async_api import async_playwright, TimeoutError as TimeoutException
 import logging
@@ -349,6 +348,7 @@ async def automate_form_fill_new(data: FormData):
             if len(data.infringing_urls) == 0:
                 logger.error(f"No valid urls found for {data.id}")
                 raise Exception(f"No valid urls found for {data.id}")
+            # print(data.infringing_urls)
             # Navigate to form
             await page.goto(Config.FORM_URL, wait_until='networkidle')
             await page.wait_for_timeout(1000)  # Ensure page is fully loaded
@@ -406,39 +406,26 @@ def main():
     # Testing data. Replace with actual data
     print("comment this to run the script")
     return
-    # with sync_playwright() as p:
-    #     browser = p.chromium.launch(headless=False)
-    #     page = browser.new_page()
-    #
-    #     # Navigate to form
-    #     page.goto(Config.FORM_URL)
-    #
-    #
-    #     form_data = FormData(
-    #         countryOfResidence="germany",
-    #         isChildAbuseContent=True,
-    #         removeChildAbuseContent=True,
-    #         fullLegalName="John Doe",
-    #         companyName="Example Corp",
-    #         companyYouRepresent="",
+    #   form_data = FormData(
+    #         country_of_residence="germany",
+    #         is_child_abuse_content=True,
+    #         remove_child_abuse_content=True,
+    #         full_legal_name="John Doe",
+    #         company_name="Example Corp",
+    #         company_you_represent="",
     #         email="john@example.com",
-    #         infringingUrls=["https://example.com/page1", "https://example.com/page2", "https://example.com/page2","https://example.com/page2"],
-    #         isRelatedToMedia=True,
-    #         questionOne="This content violates...",
-    #         questionTwo="The specific text...",
-    #         questionThree="Additional details...",
-    #         confirmForm=True,
-    #         signature="John Doe"
+    #         infringing_urls=[ "https://maps.app.goo.gl/TKVn78YHah7Q11MBA","https://www.google.com/maps/reviews/@52.4453387,9.6285157,17z/data=!3m1!4b1!4m6!14m5!1m4!2m3!1sChZDSUhNMG9nS0VJQ0FnSUN4NUlhbUpnEAE!2m1!1s0x0:0x2ae52c2f6adfc3f3?hl=de&entry=ttu&g_ep=EgoyMDI1MDMxMi4wIKXMDSoJLDEwMjExNDUzSAFQAw%3D%3D", "https://www.google.com/maps/contrib/113006482417788791814/place/ChIJv_Ex3GVVmTkRPFGG7DnYMl0/@26.8857776,80.8330741,16z/data=!4m6!1m5!8m4!1e1!2s113006482417788791814!3m1!1e1?hl=en-GB&entry=ttu&g_ep=EgoyMDI1MDMxMi4wIKXMDSoJLDEwMjExNDUzSAFQAw%3D%3D"],
+    #         is_related_to_media=True,
+    #         question_one="This content violates...",
+    #         question_two="The specific text...",
+    #         question_three="Additional details...",
+    #         confirm_form=True,
+    #         signature="John Doe",
+    #         id="1234567890",
+    #         send_notice_to_author=True
     #     )
-
-        # form_filler = LegalFormFiller(page)
-        # form_filler.fill_form(form_data)
-        #
-        # # Optional: Wait for manual review before submitting
-        # page.pause()
-        #
-        # browser.close()
-
+    #   asyncio.run(automate_form_fill_new(form_data))
+    
 
 if __name__ == "__main__":
     main()
