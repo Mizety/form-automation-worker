@@ -1,7 +1,6 @@
+import asyncio
 import random
 import sys
-import time
-
 from playwright.async_api import async_playwright, TimeoutError as TimeoutException
 import logging
 import re
@@ -9,6 +8,7 @@ from dataclasses import dataclass, field
 from typing import List, Optional
 import os
 from config import Config
+from discord_notification import notify_to_discord, notify_to_discord_with_failed_content
 
 logging.basicConfig(
     level=getattr(logging, Config.LOG_LEVEL),
@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 class FormData:
     country_of_residence: str = field(metadata={"alias": "countryOfResidence"})
     is_child_abuse_content: bool = field(metadata={"alias": "isChildAbuseContent"})
-    remove_child_abuse_content: bool = field(metadata={"alias": "removeChildAbuseContent"})
+    remove_child_abuse_content: bool = field(metadata={"alias": "removeChildAbuseContent"}) # If we are removing anonymously or not. Its a bit misleading. Please check documentation.
     full_legal_name: str = field(metadata={"alias": "fullLegalName"})
     company_name: str = field(metadata={"alias": "CompanyName"})
     company_you_represent: str = field(metadata={"alias": "CompanyYouRepresent"})
@@ -50,24 +50,6 @@ class LegalFormFiller:
         self.page = page
         self.errors = []
 
-    @staticmethod
-    def is_eu_member(country):
-        eu_countries = {
-            'Austria', 'Belgium', 'Bulgaria', 'Croatia', 'Cyprus', 'Czech Republic',
-            'Denmark', 'Estonia', 'Finland', 'France', 'Germany', 'Greece', 'Hungary',
-            'Ireland', 'Italy', 'Latvia', 'Lithuania', 'Luxembourg', 'Malta',
-            'Netherlands', 'Poland', 'Portugal', 'Romania', 'Slovakia', 'Slovenia',
-            'Spain', 'Sweden', 'Deutschland'
-        }
-        return country in eu_countries
-
-    @staticmethod
-    def is_special_country(country):
-        special_countries = {
-            'Germany', 'Deutschland'
-        }
-        return country in special_countries
-
     async def select_country(self, country_name):
         try:
             await self.page.click('div.sc-select')  # Open dropdown
@@ -88,127 +70,103 @@ class LegalFormFiller:
                     }
               )
             logger.error(f"Failed to select country: {str(e)}")
+            raise
 
-    async def select_language(self, language):
+    async def handle_child_abuse_content(self, is_child_abuse_content, remove_child_abuse_content):
+        """Handle child abuse content section of the form."""
         try:
-            # Click to open the language selector dropdown
-            language_selector = self.page.locator('div.language-selector-select.sc-select')
-            await language_selector.click()
-
-            # Find and click the language option
-            # language_option = self.page.locator('li[role="option"]').filter(
-            #     has_text=re.compile(f"^{re.escape(language)}$"))
-            # print(language_option)
-            # await language_option.first.click()
-            language_option = self.page.locator('li[role="option"][aria-label="Deutsch"]')
-            # print(language_option)
-            await language_option.first.click()
-
-            # Wait for dropdown to close
-            await self.page.wait_for_selector('div.language-selector-select[aria-expanded="false"]', timeout=5000)
-            await self.page.screenshot(path="images/language_selected.png")
-            await self.page.wait_for_timeout(1000)
-            logger.info(f"Selected language: {language}")
-
+            if is_child_abuse_content:
+                confirm_cbc = self.page.locator("input#confirm_violate_csae_laws--confirm")
+                await confirm_cbc.scroll_into_view_if_needed()
+                await confirm_cbc.check(force=True)
+                
+                if remove_child_abuse_content:
+                    confirm_anc = self.page.locator("input#confirm_to_report_anonymous--confirm")
+                    await confirm_anc.scroll_into_view_if_needed()
+                    await confirm_anc.click(force=True)
+                    
+            logger.info("Child abuse content section handled successfully")
         except Exception as e:
             self.errors.append({
-                'message': f"Failed to select language: {language}",
+                'message': "Failed to handle child abuse content section",
                 'data': str(e)
             })
-            logger.error(f"Failed to select language: {str(e)}")
-
-    async def fill_form(self, data: FormData, screenshot_path: str = None, variantGermany: bool = True) -> None:
+            logger.error(f"Failed to handle child abuse content section: {str(e)}")
+            raise
+    
+    async def fill_personal_info(self, full_legal_name, email, is_anonymous=False):
+        """Fill personal information section of the form."""
         try:
-
-            # Select language
-            # await self.select_language("Deutsch")
-            await self.page.wait_for_timeout(1000)
-
-            # Select country
-            country_name = "Deutschland" # data.country_of_residence, we are only targeting Germany.
-            for attempt in range(5):
-                try:
-                    await self.select_country(country_name)
-                    country_name = country_name.capitalize()
-
-                    if attempt == 4:
-                        country_name = country_name.upper()
-                    if attempt == 3:
-                        country_name = country_name.lower()
-                    break
-                except Exception as e:
-                    logger.warning(f"Failed to select country: {str(e)}. Retrying...")
-
-            await self.page.wait_for_timeout(3000)
-            eu = self.is_eu_member(country_name)
-            # Handle child abuse content section
-            if eu and data.is_child_abuse_content:
-                confim_cbc = self.page.locator("input#confirm_violate_csae_laws--confirm")
-                await confim_cbc.scroll_into_view_if_needed()
-                await confim_cbc.check(force=True)
-            await self.page.wait_for_timeout(1000)
-            # Fill personal information
-            if eu and data.is_child_abuse_content and data.remove_child_abuse_content:
-                confirm_anc = self.page.locator("input#confirm_to_report_anonymous--confirm")
-                await confirm_anc.scroll_into_view_if_needed()
-                await confirm_anc.click(force=True)
-                
-                name_locator = self.page.locator('#full_name')
-                await name_locator.scroll_into_view_if_needed()
-                await name_locator.fill(data.full_legal_name)
-                # email_locator = self.page.locator('#contact_email_not_required')
-                # await email_locator.scroll_into_view_if_needed()
-                # await email_locator.fill(data.email)
-            else:
-                name_locator = self.page.locator('#full_name')
+        
+            name_locator = self.page.locator('#full_name')
+            await name_locator.scroll_into_view_if_needed()
+            await name_locator.fill(full_legal_name)
+            
+            if not is_anonymous:
                 email_locator = self.page.locator('#contact_email_noprefill')
-                await name_locator.fill(data.full_legal_name)
-                await email_locator.fill(data.email)
-
+                await email_locator.scroll_into_view_if_needed()
+                await email_locator.fill(email)
+                
+            logger.info("Personal information filled successfully")
+        except Exception as e:
+            self.errors.append({
+                'message': "Failed to fill personal information",
+                'data': str(e)
+            })
+            logger.error(f"Failed to fill personal information: {str(e)}")
+            raise
+    
+    async def fill_company_info(self, company_name, company_you_represent):
+        """Fill company information section of the form."""
+        try:
             company_name_locator = self.page.locator('#companyname')
             await company_name_locator.scroll_into_view_if_needed()
-            await company_name_locator.fill(data.company_name)
-            await self.page.wait_for_timeout(1000)
+            await company_name_locator.fill(company_name)
+            
             company_represent_locator = self.page.locator('#representedrightsholder')
             await company_represent_locator.scroll_into_view_if_needed()
-            await company_represent_locator.fill(data.company_you_represent)
-            # print(await self.page.content())
-            variant = self.is_special_country(country_name)
-            await self.page.wait_for_timeout(1000)
-            if variant or variantGermany:
-                # German form does not have some fields
-                search_query = f'input[name="url_box3_geo_reviews"]'
-
-                for i, url in enumerate(data.infringing_urls):
+            await company_represent_locator.fill(company_you_represent)
+            
+            logger.info("Company information filled successfully")
+        except Exception as e:
+            self.errors.append({
+                'message': "Failed to fill company information",
+                'data': str(e)
+            })
+            logger.error(f"Failed to fill company information: {str(e)}")
+            raise
+    
+    async def fill_infringing_urls(self, urls, is_german_variant=True):
+        """Fill infringing URLs section of the form."""
+        try:
+            search_query = 'input[name="url_box3_geo_reviews"]'
+                
+            for i, url in enumerate(urls):
                     locate = self.page.locator(search_query)
                     if i == 0:
                         await locate.fill(url)
                     else:
-                        search_sub_query = f'input[name="url_box3_geo_reviews"]'
                         add_checkbox = self.page.locator('div[data-frd-identifier="IDENTIFIER_LEGAL_REMOVALS_TARGET"]').locator("a.add-additional").first
-
-                        if await add_checkbox.is_visible():
-                            await add_checkbox.click(
-                                force=True
-                            )
-                        else:
-                            print("Button is not visible!")
                         
-                        await self.page.locator(search_sub_query).nth(i).fill(url)
-                        # await self.page.fill(search_sub_query, url)
-            # else:
-                # url_fields = self.page.locator("div.field.inline-branch input[name='url_box3']")
-
-                # # Ensure the number of input fields matches the number of URLs
-                # for i, url in enumerate(data.infringing_urls):
-                #     if i < url_fields.count():
-                #         await url_fields.nth(i).fill(url)  # Fill the existing field
-                #     else:
-                #         add_additional = self.page.locator("a.add-additional").first  # Click "Add additional field" button
-                #         await add_additional.click(force=True)
-                #         await self.page.locator("div.field.inline-branch input[name='url_box3']").nth(i).fill(
-                #             url)  # Fill new field
-            if data.is_related_to_media:
+                        if await add_checkbox.is_visible():
+                            await add_checkbox.click(force=True)
+                        else:
+                            logger.warning("Add additional URL button is not visible")
+                        
+                        await self.page.locator(search_query).nth(i).fill(url)
+            logger.info(f"Filled {len(urls)} infringing URLs successfully")
+        except Exception as e:
+            self.errors.append({
+                'message': "Failed to fill infringing URLs",
+                'data': str(e)
+            })
+            logger.error(f"Failed to fill infringing URLs: {str(e)}")
+            raise
+    
+    async def handle_media_related_question(self, is_related_to_media):
+        """Handle the question about media relation. It is marked as deprecated."""
+        try:
+            if is_related_to_media:
                 ugcyes = self.page.locator("label[for='is_geo_ugc_imagery--yes']")
                 if await ugcyes.is_visible():
                     await ugcyes.click(force=True)
@@ -216,49 +174,134 @@ class LegalFormFiller:
                 ngcno = self.page.locator("label[for='is_geo_ugc_imagery--no']")
                 if await ngcno.is_visible():
                     await ngcno.click(force=True)
-
-            await self.page.wait_for_timeout(1000)
-            # Fill explanations using locators
-            suffix = "_not_germany" if not variantGermany else ""
+                    
+            logger.info(f"Media relation question answered: {is_related_to_media}")
+        except Exception as e:
+            self.errors.append({
+                'message': "Failed to handle media relation question",
+                'data': str(e)
+            })
+            logger.error(f"Failed to handle media relation question: {str(e)}")
+            raise
+    
+    async def fill_explanations(self, question_one, question_two, question_three, is_german_variant=True):
+        """Fill explanation text areas in the form."""
+        try:
+            suffix = "" if is_german_variant else "_not_germany"
+            
             query_q1 = f'textarea#legalother_explain_googlemybusiness{suffix}'
             q1_locator = self.page.locator(query_q1)
             await q1_locator.scroll_into_view_if_needed()
-            await q1_locator.fill(data.question_one)
-
+            await q1_locator.fill(question_one)
+            
             q2_locator = self.page.locator('textarea#legalother_quote')
             await q2_locator.scroll_into_view_if_needed()
-            await q2_locator.fill(data.question_two)
-
+            await q2_locator.fill(question_two)
+            
             query_q3 = f'textarea#legalother_quote_googlemybusiness{suffix}'
             q3_locator = self.page.locator(query_q3)
             await q3_locator.scroll_into_view_if_needed()
-            await q3_locator.fill(data.question_three)
-            await self.page.wait_for_timeout(1000)
-            if(data.send_notice_to_author == False):
-                mcs = self.page.locator("input#fwd_notice_consent--disagree")
-                await mcs.scroll_into_view_if_needed()
-                await mcs.click(force=True)
-            # Handle confirmation and signature
-            if data.confirm_form:
+            await q3_locator.fill(question_three)
+            
+            logger.info("Explanations filled successfully")
+        except Exception as e:
+            self.errors.append({
+                'message': "Failed to fill explanations",
+                'data': str(e)
+            })
+            logger.error(f"Failed to fill explanations: {str(e)}")
+            raise
+    
+    async def handle_consent_and_signature(self, send_notice_to_author, confirm_form, signature):
+        """Handle consent checkboxes and signature field."""
+        try:
+            if confirm_form:
                 lcs = self.page.locator("input#legal_consent_statement--agree")
                 await lcs.scroll_into_view_if_needed()
                 await lcs.click(force=True)
-            await self.page.wait_for_timeout(1000)
+            
             signature_locator = self.page.locator('#signature')
             await signature_locator.scroll_into_view_if_needed()
-            await signature_locator.fill(data.signature)
+            await signature_locator.fill(signature)
+            
+            logger.info("Consent and signature handled successfully")
+        except Exception as e:
+            self.errors.append({
+                'message': "Failed to handle consent and signature",
+                'data': str(e)
+            })
+            logger.error(f"Failed to handle consent and signature: {str(e)}")
+            raise
+
+    async def fill_form(self, data: FormData, screenshot_path: str = None, variantGermany: bool = True, type: int = 1) -> None:
+        try:
+            # Select country
+            country_name = "Deutschland"  # We are only targeting Germany
+            for attempt in range(5):
+                try:
+                    await self.select_country(country_name)
+                    break
+                except Exception as e:
+                    if attempt == 3:
+                        country_name = country_name.lower()
+                    elif attempt == 4:
+                        country_name = country_name.upper()
+                    logger.warning(f"Failed to select country: {str(e)}. Retrying...")
+
+            await self.page.wait_for_timeout(3000)
+            
+            # Handle child abuse content section
+            await self.handle_child_abuse_content(data.is_child_abuse_content, data.remove_child_abuse_content)
+            
+            await self.page.wait_for_timeout(1000)
+            
+            # Fill personal information
+            is_anonymous = data.is_child_abuse_content and data.remove_child_abuse_content
+            await self.fill_personal_info(data.full_legal_name, data.email, is_anonymous)
+            
+            # Fill company information
+            await self.fill_company_info(data.company_name, data.company_you_represent)
+            
+            await self.page.wait_for_timeout(1000)
+            
+            # Fill infringing URLs
+            await self.fill_infringing_urls(data.infringing_urls, is_german_variant= (variantGermany))
+            
+            # Handle media related question
+            try:
+                await self.handle_media_related_question(data.is_related_to_media)
+            except Exception as e:
+                logger.error(f"Media related question not visible, its marked as deprecated.")
+            
+            await self.page.wait_for_timeout(1000)
+            
+            # Fill explanations
+            await self.fill_explanations(
+                data.question_one, 
+                data.question_two, 
+                data.question_three, 
+                is_german_variant=variantGermany
+            )
+            
+            await self.page.wait_for_timeout(1000)
+            
+            # Handle consent and signature
+            await self.handle_consent_and_signature(
+                data.send_notice_to_author,
+                data.confirm_form,
+                data.signature
+            )
 
             logger.info("Form filled successfully but yet to submit")
 
         except Exception as e:
             logger.error(f"Error filling form: {str(e)}")
             await self.page.screenshot(path=screenshot_path)
-            self.errors.append(
-                {
-                    'message': f"Error filling form: {str(e)}",
-                    'data': str(e)
-                }
-            )
+            notify_to_discord("Error filling form", str(e), screenshot_path, type=type)
+            self.errors.append({
+                'message': f"Error filling form: {str(e)}",
+                'data': str(e)
+            })
             raise
 
     async def submit_form(self, screenshot_path: str = None):
@@ -282,6 +325,7 @@ class LegalFormFiller:
                     logger.info("Form submitted successfully after captcha")
                 except Exception as e:
                     await self.page.screenshot(path=screenshot_path)
+                    notify_to_discord("Error submitting form", str(e), screenshot_path)
                     logger.error(f"Failed to submit form after captcha: {str(e)}")
                     raise
                  
@@ -295,7 +339,7 @@ class LegalFormFiller:
             )
             raise
 
-async def automate_form_fill_new(data: FormData):
+async def automate_form_fill_new(data: FormData, submit_form: bool = True):
 
     # Get absolute path to extension directory
     extension_path = os.path.abspath('./extension')
@@ -328,11 +372,6 @@ async def automate_form_fill_new(data: FormData):
             user_agent=random.choice(user_agent_strings),
             locale="de-DE",
             viewport={"width": 1024, "height": 720 },
-            # record_video_dir="videos",
-            # record_video_size={
-            #     "width": 1024,
-            #     "height": 720
-            # }
         )
     
         # Add browser extension
@@ -341,24 +380,30 @@ async def automate_form_fill_new(data: FormData):
             page = await browser.new_page()
             urls = []
             for url in data.infringing_urls:
-                newUrl = await check_url(url, page) 
+                newUrl = await check_url(url, page, data.id , type = 1 if submit_form else 2) 
                 if newUrl != "":
                     urls.append(newUrl)
             data.infringing_urls = urls
 
             if len(data.infringing_urls) == 0:
                 logger.error(f"No valid urls found for {data.id}")
+                notify_to_discord("No valid urls found for " + data.id, type= 1 if submit_form else 2)
                 raise Exception(f"No valid urls found for {data.id}")
             # Navigate to form
             await page.goto(Config.FORM_URL, wait_until='networkidle')
             await page.wait_for_timeout(1000)  # Ensure page is fully loaded
             form_filler = LegalFormFiller(page)
-            await form_filler.fill_form(data, screenshot_path="images/type_1_"+data.id+".png", variantGermany=Config.VARIANT_GERMANY)
+            await form_filler.fill_form(data, screenshot_path="images/type_1_"+data.id+".png", variantGermany=Config.VARIANT_GERMANY, type = 1 if submit_form else 2)
             await page.wait_for_timeout(2000)
-            await form_filler.submit_form(screenshot_path="images/type_2_"+data.id+".png")
+            if submit_form:
+                await form_filler.submit_form(screenshot_path="images/type_2_"+data.id+".png")
+            message = " Successfully completed form for: " + data.id
+            notify_to_discord(message , type= 1 if submit_form else 2)
+            # await page.pause()
 
         except Exception as e:
             logger.error(f"Error automating form fill: {str(e)}")
+            await notify_to_discord_with_failed_content(message, True, data.id, [] , type = 2)
             raise
         finally:
             await browser.close()
@@ -369,13 +414,18 @@ async def automate_form_fill_new(data: FormData):
     finally:
         await remove_user_data_dir(user_data_dir)
 
-async def check_url(url, page):
+async def check_url(url, page, id, type: int = 1) -> str:
     try:
         if "https://maps.app.goo.gl" in url:
             return url
         elif "https://www.google.com/maps/reviews" in url or "https://www.google.com/maps/contrib" in url:
             await page.goto(url)
             await page.wait_for_timeout(1000)
+            # we need to check if cookie detected is present and if so, click on it 
+            #<input type="submit" value="Alle akzeptieren" class="baseButtonGm3 filledButtonGm3 button searchButton" aria-label="Alle akzeptieren">
+            cookie_detected = page.locator('input[value="Alle akzeptieren"]')
+            if cookie_detected and await cookie_detected.first.is_visible():
+                await cookie_detected.first.click(force=True)
             # Click on the first link
             # <button class="PP3Y3d S1qRNe" data-review-id="ChZDSUhNMG9nS0VJQ0FnSUN4NUlhbUpnEAE" jslog="14326; track:click;" aria-label="Aktionen für die Rezension von King Kong" data-tooltip="Aktionen für die Rezension von King Kong" jsaction="pane.wfvdle5.review.actionMenu; keydown:pane.wfvdle5.review.actionMenu; focus:pane.focusTooltip; blur:pane.blurTooltip"><span class="eaLgGf google-symbols" aria-hidden="true" style="font-size: 18px;"></span></button>
             await page.click('button.PP3Y3d' , force=True)
@@ -394,6 +444,8 @@ async def check_url(url, page):
             return ""
     except Exception as e:
         logger.error(f"Error checking url: {str(e)}")
+        await page.screenshot(path="images/type_3_"+id+".png")
+        notify_to_discord("Error checking url", str(e), "images/type_3_"+id+".png" , type = type)
         return False
 
 
@@ -405,40 +457,28 @@ async def remove_user_data_dir(directory):
 def main():
     # Testing data. Replace with actual data
     print("comment this to run the script")
+    # asyncio.run(automate_form_fill_new(FormData(
+    #     id="1234567890",
+    #     country_of_residence="Germany",
+    #     email="test@test.com",
+    #     full_legal_name="John Doe",
+    #     company_name="Example Corp",
+    #     company_you_represent="nmp",
+    #     infringing_urls=["https://maps.app.goo.gl/dAYT5CocEvWCy1QW6", "https://maps.app.goo.gl/dAYT5CocEvWCy1QW6"],
+    #     is_related_to_media=False, # deprecated, its present but not visible
+    #     question_one="This content violates...",
+    #     question_two="The specific text...",
+    #     question_three="Additional details...",
+    #     confirm_form=True,
+    #     send_notice_to_author=True, # deprecated
+    #     signature="John Doe",
+    #     is_child_abuse_content=True,
+    #     remove_child_abuse_content=True
+    # ), False))
     return
-    # with sync_playwright() as p:
-    #     browser = p.chromium.launch(headless=False)
-    #     page = browser.new_page()
-    #
-    #     # Navigate to form
-    #     page.goto(Config.FORM_URL)
-    #
-    #
-    #     form_data = FormData(
-    #         countryOfResidence="germany",
-    #         isChildAbuseContent=True,
-    #         removeChildAbuseContent=True,
-    #         fullLegalName="John Doe",
-    #         companyName="Example Corp",
-    #         companyYouRepresent="",
-    #         email="john@example.com",
-    #         infringingUrls=["https://example.com/page1", "https://example.com/page2", "https://example.com/page2","https://example.com/page2"],
-    #         isRelatedToMedia=True,
-    #         questionOne="This content violates...",
-    #         questionTwo="The specific text...",
-    #         questionThree="Additional details...",
-    #         confirmForm=True,
-    #         signature="John Doe"
-    #     )
-
-        # form_filler = LegalFormFiller(page)
-        # form_filler.fill_form(form_data)
-        #
-        # # Optional: Wait for manual review before submitting
-        # page.pause()
-        #
-        # browser.close()
 
 
 if __name__ == "__main__":
     main()
+    # notify_to_discord("Test", "Test", "images/type_3_1234567890.png")
+    # notify_to_discord("Passed ", )
