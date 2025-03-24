@@ -1,0 +1,43 @@
+services:
+  integration-testing-app:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: >
+      sh -c "
+      xvfb-run -a --server-args='-screen 0 1920x1080x24' python /app/tests/playwright_form_checks.py
+      xvfb-run -a --server-args='-screen 0 1920x1080x24' python /app/tests/playwright_url_checks.py
+      "
+    environment:
+      - PYTHONUNBUFFERED=1 # Changed from 0 to 1 for better logging
+      - DISPLAY=:99
+      - PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+      - PLAYWRIGHT_HEADLESS=false
+      - PYTHONIOENCODING=utf-8
+      - PYTHONPATH=/app
+      - VARIANT_GERMANY=false
+      # Fix for asyncio event loop issues
+      - PYTHONDEVMODE=0
+      - PYTHONASYNCIODEBUG=0
+    env_file:
+      - .env
+    networks:
+      - app-network
+    restart: on-failure
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+
+networks:
+  app-network:
+    driver: bridge

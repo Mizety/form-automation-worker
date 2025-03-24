@@ -23,3 +23,5 @@ images
 *.log.*
 *.log.*.*
 .idea
+
+users
