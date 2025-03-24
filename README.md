@@ -83,3 +83,33 @@ docker compose up --d
 
 Built with ❤️ by [@evy04](https://github.com/evy04)
 Built with ❤️ by [@mizety](https://github.com/mizety)
+
+## Running Locally in venv Tests without docker
+
+```bash
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+Run the tests
+
+```bash
+python3 tests/playwright_form_checks.py
+python3 tests/playwright_url_checks.py
+```
+
+## Browser Requirements
+
+- Chromium
+
+```bash
+playwright install --with-deps chromium
+```
+
+### If no display is available
+
+```bash
+xvfb-run -a --server-args='-screen 0 1920x1080x24' python3 tests/playwright_form_checks.py
+xvfb-run -a --server-args='-screen 0 1920x1080x24' python3 tests/playwright_url_checks.py
+```
