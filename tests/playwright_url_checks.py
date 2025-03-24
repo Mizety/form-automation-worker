@@ -107,7 +107,7 @@ class PlaywrightCheck:
  
         finally:
             content = await self.page.content()
-            notify_to_discord_with_failed_content(content, checks_failed,  "Detected URL: " + detected_url + "\n\n" + " Original URL: " + url, checks)
+            notify_to_discord_with_failed_content(content, checks_failed,  "Detected URL: " + detected_url + "\n\n" + " Original URL: " + url, checks , type = 2)
 
     async def run_test(self, url):
         """Wrapper method to run all operations in sequence"""

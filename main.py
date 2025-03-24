@@ -80,7 +80,6 @@ class RabbitMQConsumer:
                     raise Exception(f"Failed to fetch form data: {response.status}")
 
     async def process_form(self, form_id: str, retry_count: int):
-
         try:
             form_data = await self.fetch_form_data(form_id)
             await self.fetch_form_status_complete(form_id, "pending")
@@ -94,9 +93,11 @@ class RabbitMQConsumer:
 
         except Exception as e:
             logger.error("we failed submission")
-            await self.fetch_form_status_complete(form_id, "retry")
+            try:
+                await self.fetch_form_status_complete(form_id, "retry")
+            except Exception as status_error:
+                logger.error(f"Failed to update status: {status_error}")
             raise e
-
 
     async def process_form_with_limit(self, form_id, retry_count):
         async with self.semaphore:
@@ -134,10 +135,10 @@ class RabbitMQConsumer:
 
     async def process_message(self, ch, method, properties, body):
         retry_count = properties.headers.get('retry_count', 0)
+        message = json.loads(body)
+        form_id = message.get('data', {}).get('id')
         try:
-            message = json.loads(body)
-            form_id = message.get('data', {}).get('id')
-
+        
             if not form_id:
                 raise ValueError("No form ID in message")
 
@@ -166,10 +167,10 @@ class RabbitMQConsumer:
                     ch.basic_ack(delivery_tag=method.delivery_tag)
             else:
                 # Message exceeded retries - reject without requeuing
-                # It will go to the dead letter exchange if configured
                 logger.error(f"Message exceeded retries - rejecting without requeuing: {str(e)}")
-                # await self.fetch_form_status_complete(form_id, "failed")
-                await self.fetch_form_status_complete(form_id, "failed")
+                # Only update status if we have a valid form_id
+                if form_id:
+                    await self.fetch_form_status_complete(form_id, "failed")
                 ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
 
     async def start_consuming(self):

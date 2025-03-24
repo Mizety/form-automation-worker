@@ -32,8 +32,9 @@ def notify_to_discord(message, error = None, image_path = None, type = 1):
 def notify_to_discord_with_failed_content(content, checks_failed, data, checks, type = 1):
             try:
                 # Prepare the embed data
+                contentdata = "🔍 Integrity check for URL automation" if type != 1 else "🔍 Integrity check for form automation"
                 webhook_data = {
-                    "content": "🔍 Integrity check for URL automation",
+                    "content": contentdata,
                     "embeds": [{
                         "title": f"{'✅ Passed' if checks_failed == False else '❌ Failed'} Tests",
                         "color": 0x00ff00 if checks_failed == False else 0xff0000,
@@ -63,8 +64,9 @@ def notify_to_discord_with_failed_content(content, checks_failed, data, checks, 
                 else:
                     files = {}
                 
+                url = Config.FORM_SUBMISSION_WEBHOOK_URL if type == 1 else Config.DISCORD_WEBHOOK_URL
                 response = requests.post(
-                    Config.DISCORD_WEBHOOK_URL, 
+                    url, 
                     data={'payload_json': json.dumps(webhook_data)},
                     files=files
                 )

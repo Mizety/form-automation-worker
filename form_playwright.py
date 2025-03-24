@@ -153,7 +153,11 @@ class LegalFormFiller:
                         else:
                             logger.warning("Add additional URL button is not visible")
                         
-                        await self.page.locator(search_query).nth(i).fill(url)
+                        url_field = self.page.locator(search_query).nth(i)
+                        if await url_field.is_visible():
+                            await url_field.fill(url)
+                        else:
+                            logger.warning(f"URL input field {i} is not visible")
             logger.info(f"Filled {len(urls)} infringing URLs successfully")
         except Exception as e:
             self.errors.append({
@@ -383,12 +387,15 @@ async def automate_form_fill_new(data: FormData, submit_form: bool = True):
                 newUrl = await check_url(url, page, data.id , type = 1 if submit_form else 2) 
                 if newUrl != "":
                     urls.append(newUrl)
+                else:
+                    logger.warning(f"No valid url found for {url}")
+                    notify_to_discord("Invalid url found, will continue with next url for ID: " + data.id, type= 1 if submit_form else 2)
             data.infringing_urls = urls
 
-            if len(data.infringing_urls) == 0:
-                logger.error(f"No valid urls found for {data.id}")
-                notify_to_discord("No valid urls found for " + data.id, type= 1 if submit_form else 2)
-                raise Exception(f"No valid urls found for {data.id}")
+            # if len(data.infringing_urls) == 0:
+            #     logger.error(f"No valid urls found for {data.id}")
+            #     notify_to_discord("No valid urls found for ID: " + data.id, type= 1 if submit_form else 2)
+            #     raise Exception(f"No valid urls found for {data.id}")
             # Navigate to form
             await page.goto(Config.FORM_URL, wait_until='networkidle')
             await page.wait_for_timeout(1000)  # Ensure page is fully loaded
@@ -403,7 +410,7 @@ async def automate_form_fill_new(data: FormData, submit_form: bool = True):
 
         except Exception as e:
             logger.error(f"Error automating form fill: {str(e)}")
-            await notify_to_discord_with_failed_content(message, True, data.id, [] , type = 2)
+            await notify_to_discord_with_failed_content(f"Error automating form fill: {str(e)}", True, data.id, [] , type = 1 if submit_form else 2)
             raise
         finally:
             await browser.close()
@@ -422,31 +429,30 @@ async def check_url(url, page, id, type: int = 1) -> str:
             await page.goto(url)
             await page.wait_for_timeout(1000)
             # we need to check if cookie detected is present and if so, click on it 
-            #<input type="submit" value="Alle akzeptieren" class="baseButtonGm3 filledButtonGm3 button searchButton" aria-label="Alle akzeptieren">
             cookie_detected = page.locator('input[value="Alle akzeptieren"]')
-            if cookie_detected and await cookie_detected.first.is_visible():
+            if await cookie_detected.count() > 0 and await cookie_detected.first.is_visible():
                 await cookie_detected.first.click(force=True)
-            # Click on the first link
-            # <button class="PP3Y3d S1qRNe" data-review-id="ChZDSUhNMG9nS0VJQ0FnSUN4NUlhbUpnEAE" jslog="14326; track:click;" aria-label="Aktionen für die Rezension von King Kong" data-tooltip="Aktionen für die Rezension von King Kong" jsaction="pane.wfvdle5.review.actionMenu; keydown:pane.wfvdle5.review.actionMenu; focus:pane.focusTooltip; blur:pane.blurTooltip"><span class="eaLgGf google-symbols" aria-hidden="true" style="font-size: 18px;"></span></button>
-            await page.click('button.PP3Y3d' , force=True)
+            
+            await page.click('button.PP3Y3d', force=True)
             await page.wait_for_timeout(1000)
-            # Click on the first link
-            # <a href="https://maps.app.goo.gl/1234567890" class="xqQF9" jslog="14326; track:click;" aria-label="King Kong" jsaction="pane.wfvdle5.review.actionMenu; keydown:pane.wfvdle5.review.actionMenu; focus:pane.focusTooltip; blur:pane.blurTooltip"><span class="eaLgGf google-symbols" aria-hidden="true" style="font-size: 18px;"></span></a>
-            # await page.click('a.xqQF9' , force=True)
-            # <div aria-checked="false" class="fxNQSd" data-index="0" role="menuitemradio" tabindex="0" ved="1i:1,t:153707,e:0,p:hI3YZ9WdC6Sf4-EPsLCeoQU:55" vet="153707" jsaction="click: actionmenu.select; keydown: actionmenu.keydown"><div class="twHv4e"><div class="mLuXec">Rezension teilen</div></div></div>
-            await page.click('div.fxNQSd' , force=True)
+            
+            await page.click('div.fxNQSd', force=True) 
             await page.wait_for_timeout(1000)
-            #  copy the url from input <input class="vrsrZe" readonly="" type="text" value="https://maps.app.goo.gl/H3C1ESf1jVYUU8pq7" jsaction="pane.wfvdle48.clickInput">
+            
             url_locator = page.locator('input.vrsrZe')
             url = await url_locator.input_value()
-            return url
+            logger.info(f"URL: {url}")
+            if url.startswith("https://maps.app.goo.gl/"):
+                return url
+            else:
+                return ""
         else:
             return ""
     except Exception as e:
         logger.error(f"Error checking url: {str(e)}")
-        await page.screenshot(path="images/type_3_"+id+".png")
-        notify_to_discord("Error checking url", str(e), "images/type_3_"+id+".png" , type = type)
-        return False
+        await page.screenshot(path=f"images/type_3_{id}.png")
+        notify_to_discord("Error checking url", str(e), f"images/type_3_{id}.png", type=type)
+        return ""  # Return empty string on error, not False
 
 
 async def remove_user_data_dir(directory):
