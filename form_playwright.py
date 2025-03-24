@@ -392,10 +392,10 @@ async def automate_form_fill_new(data: FormData, submit_form: bool = True):
                     notify_to_discord("Invalid url found, will continue with next url for ID: " + data.id, type= 1 if submit_form else 2)
             data.infringing_urls = urls
 
-            # if len(data.infringing_urls) == 0:
-            #     logger.error(f"No valid urls found for {data.id}")
-            #     notify_to_discord("No valid urls found for ID: " + data.id, type= 1 if submit_form else 2)
-            #     raise Exception(f"No valid urls found for {data.id}")
+            if len(data.infringing_urls) == 0:
+                logger.error(f"No valid urls found for {data.id}")
+                notify_to_discord("No valid urls found for ID: " + data.id, type= 1 if submit_form else 2)
+                raise Exception(f"No valid urls found for {data.id}")
             # Navigate to form
             await page.goto(Config.FORM_URL, wait_until='networkidle')
             await page.wait_for_timeout(1000)  # Ensure page is fully loaded
