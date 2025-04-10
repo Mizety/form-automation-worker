@@ -10,7 +10,7 @@ import sys
 
 from config import Config
 from form_playwright import automate_form_fill_new, FormData
-
+from discord_notification import notify_to_discord
 
 logging.basicConfig(
     level=getattr(logging, Config.LOG_LEVEL),
@@ -170,6 +170,7 @@ class RabbitMQConsumer:
                 logger.error(f"Message exceeded retries - rejecting without requeuing: {str(e)}")
                 # Only update status if we have a valid form_id
                 if form_id:
+                    notify_to_discord(f"Form: {form_id} - Message exceeded retries - rejecting without requeuing",error=str(e),  type = 1)
                     await self.fetch_form_status_complete(form_id, "failed")
                 ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
 
@@ -198,13 +199,16 @@ class RabbitMQConsumer:
 
 if __name__ == "__main__":
     try:
+        notify_to_discord("Starting consumer",  type = 1)
         consumer = RabbitMQConsumer()
         asyncio.run(consumer.start_async_consuming())
     except KeyboardInterrupt:
         logger.info("Shutting down consumer")
+        notify_to_discord("Shutting down consumer",  type = 1)
         sys.exit(0)
     except Exception as e:
         logger.error(f"Fatal error: {str(e)}")
+        notify_to_discord(f"Fatal error: {str(e)}",error=str(e),  type = 1)
         sys.exit(1)
     # con = RabbitMQConsumer()
     # loop = asyncio.new_event_loop()

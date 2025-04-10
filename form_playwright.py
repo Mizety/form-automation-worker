@@ -363,7 +363,7 @@ async def automate_form_fill_new(data: FormData, submit_form: bool = True):
             user_data_dir=user_data_dir,
             headless=Config.BROWSER_HEADLESS,
             args=[f'--disable-extensions-except={extension_path}',
-                f'--load-extension={extension_path}'   
+                f'--load-extension={extension_path}',   
                     '--disable-gpu',  # Prevents GPU-related crashes in Docker
                     '--disable-dev-shm-usage',  # Avoids crashes due to small /dev/shm
                     '--no-sandbox',  # Required for running as root inside Docker
@@ -410,7 +410,7 @@ async def automate_form_fill_new(data: FormData, submit_form: bool = True):
 
         except Exception as e:
             logger.error(f"Error automating form fill: {str(e)}")
-            await notify_to_discord_with_failed_content(f"Error automating form fill: {str(e)}", True, data.id, [] , type = 1 if submit_form else 2)
+            notify_to_discord_with_failed_content(f"Error automating form fill: {str(e)}", True, data.id, [] , type = 1 if submit_form else 2)
             raise
         finally:
             await browser.close()
@@ -430,7 +430,7 @@ async def check_url(url, page, id, type: int = 1) -> str:
             await page.wait_for_timeout(1000)
             # we need to check if cookie detected is present and if so, click on it 
             cookie_detected = page.locator('input[value="Alle akzeptieren"]')
-            if cookie_detected and await cookie_detected.first.is_visible():
+            if await cookie_detected.count() > 0 and await cookie_detected.first.is_visible():
                 await cookie_detected.first.click(force=True)
             
             await page.click('button.PP3Y3d', force=True)

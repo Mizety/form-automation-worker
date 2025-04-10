@@ -78,7 +78,7 @@ class PlaywrightCheck:
     
         try:
             cookie_detected = self.page.locator('input[value="Alle akzeptieren"]')
-            if cookie_detected and await cookie_detected.first.is_visible():
+            if await cookie_detected.count() > 0 and await cookie_detected.first.is_visible():
                 await cookie_detected.first.click(force=True)
             # check if following selectors are present, visible and clickable/enabled.
             try: 
